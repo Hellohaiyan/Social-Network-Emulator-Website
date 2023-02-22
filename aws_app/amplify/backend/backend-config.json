@@ -1,20 +1,5 @@
 {
-  "api": {
-    "sneRESTAPI": {
-      "dependsOn": [
-        {
-          "attributes": [
-            "Name",
-            "Arn"
-          ],
-          "category": "function",
-          "resourceName": "sneLambdaFun"
-        }
-      ],
-      "providerPlugin": "awscloudformation",
-      "service": "API Gateway"
-    }
-  },
+  "api": {},
   "function": {
     "sneLambdaFun": {
       "build": true,
