@@ -1,1 +1,63 @@
-{}
+{
+  "api": {
+    "sneRESTAPI": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "sneLambdaFun"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
+  "function": {
+    "sneLambdaFun": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributeEnvMap": {
+            "Arn": "TABLE_ARN",
+            "Name": "TABLE_NAME"
+          },
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "storage",
+          "resourceName": "sneDB"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_sneLambdaFun_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "sneLambdaFun"
+        }
+      ]
+    },
+    "AMPLIFY_function_sneLambdaFun_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "sneLambdaFun"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "sneDB": {
+      "providerPlugin": "awscloudformation",
+      "service": "DynamoDB"
+    }
+  }
+}
