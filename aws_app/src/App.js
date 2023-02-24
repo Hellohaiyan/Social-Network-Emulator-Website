@@ -1,11 +1,15 @@
 import './App.css';
+import React from 'react';
+import {SignupForm} from './components/SignupForm/SignUp.js';
+import {LoginForm} from './components/LoginForm/LoginForm.js';
 
-function App() {
+function App() 
+{
   return (
-    <div className="App">
-      Hello World
-    </div>
-  );
+    <section>
+      <SignupForm/>
+      <LoginForm/>
+    </section>
+  )
 }
-
 export default App;
