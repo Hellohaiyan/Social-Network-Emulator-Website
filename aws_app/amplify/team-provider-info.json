@@ -12,14 +12,14 @@
       "AmplifyAppId": "dofv211y7lq5y"
     },
     "categories": {
+      "storage": {
+        "sneDB": {}
+      },
       "function": {
         "sneLambdaFun": {
           "deploymentBucketName": "amplify-awsapp-sne-83212-deployment",
           "s3Key": "amplify-builds/sneLambdaFun-67666b6a6c5232497362-build.zip"
         }
-      },
-      "storage": {
-        "sneDB": {}
       }
     }
   }
