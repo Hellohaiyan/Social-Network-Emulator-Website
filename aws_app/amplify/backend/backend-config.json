@@ -1,20 +1,5 @@
 {
-  "api": {
-    "sneHTTPAPI": {
-      "dependsOn": [
-        {
-          "attributes": [
-            "Name",
-            "Arn"
-          ],
-          "category": "function",
-          "resourceName": "sneUsersFun"
-        }
-      ],
-      "providerPlugin": "awscloudformation",
-      "service": "API Gateway"
-    }
-  },
+  "api": {},
   "function": {
     "sneUsersFun": {
       "build": true,

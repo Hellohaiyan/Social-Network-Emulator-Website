@@ -20,9 +20,6 @@
           "deploymentBucketName": "amplify-awsapp-sne-83212-deployment",
           "s3Key": "amplify-builds/sneUsersFun-6434597566557031614b-build.zip"
         }
-      },
-      "api": {
-        "sneHTTPAPI": {}
       }
     }
   }
