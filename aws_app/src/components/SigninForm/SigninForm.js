@@ -10,19 +10,19 @@ export function SigninForm ()
         <h1>Please Sign In</h1>
         <form id = "form_login">
           <label>
-            <p>Email</p>
-            <input type="text" />
+             <p>Email</p>
+             <input type="text" placeholder="Enter email"/>
           </label>
           <label>
-            <p>Password</p>
-            <input type="password" />
+             <p>Password</p>
+             <input type="password" placeholder="Password"/>
           </label>
           <div>
-            <button type="submits">Sign in</button>
+             <p><button type="submits">Sign in</button></p>
           </div>
         </form> 
         <br />
-        <Link to="/SignupForm">Sign Up</Link>          
+         <Link to="/SignupForm">Dont have an account? Sign Up</Link>    
       </div>
     )
   }
