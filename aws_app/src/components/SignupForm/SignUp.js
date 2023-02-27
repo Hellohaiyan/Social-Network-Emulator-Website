@@ -1,9 +1,9 @@
 
 export function SignupForm() 
 {
-    return(
+    return (
         <div className="card col-12 col-lg-4 login-card mt-2 hv-center">
-         <h1>Please Sign up</h1>
+         <h1>Please Sign Up</h1>
             <form>
                 <div className="form-group text-left">
                 <label htmlFor="exampleInputEmail1">Email address</label>

@@ -14,10 +14,12 @@ function App()
   });
 
   return (
-    <section>
-      <SignupForm/>
-      <SigninForm/>
-    </section>
+    <div class="centered">
+     <section>
+       <SignupForm/>
+       <SigninForm/>
+     </section>
+    </div>
   )
   
 }
