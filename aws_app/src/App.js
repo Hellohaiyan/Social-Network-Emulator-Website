@@ -3,6 +3,11 @@ import React from 'react';
 import {SignupForm} from './components/SignupForm/SignUp.js';
 import {SigninForm} from './components/SigninForm/SigninForm.js';
 import axios from 'axios';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+} from "react-router-dom";
 
 function App() 
 {
@@ -14,11 +19,13 @@ function App()
   });
 
   return (
-    <div class="centered">
-     <section>
-       <SignupForm/>
-       <SigninForm/>
-     </section>
+    <div class="centered">    
+     <Router>
+        <Routes>  
+          <Route exact path="/" element={<SigninForm />} />        
+          <Route path="/SignupForm" element={<SignupForm/>} />
+        </Routes>
+      </Router>  
     </div>
   )
   

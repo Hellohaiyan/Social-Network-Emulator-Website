@@ -1,4 +1,9 @@
-export function SigninForm() 
+
+import React from "react";
+// importing Link from react-router-dom to navigate to 
+// different end points.
+import { Link } from "react-router-dom";
+export function SigninForm ()
 {
     return (
       <div className="login-wrapper">
@@ -16,6 +21,8 @@ export function SigninForm()
             <button type="submits">Sign in</button>
           </div>
         </form> 
+        <br />
+        <Link to="/SignupForm">Sign Up</Link>          
       </div>
     )
   }

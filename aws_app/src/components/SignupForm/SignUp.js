@@ -1,4 +1,6 @@
 
+import React from "react";
+import { Link } from "react-router-dom";
 export function SignupForm() 
 {
     return (
@@ -38,6 +40,8 @@ export function SignupForm()
                     Sign up
                 </button>
             </form>
+            <br />
+        <Link to="/">Sign In</Link>  
         </div>
     )
 }
