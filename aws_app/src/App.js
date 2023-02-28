@@ -22,10 +22,12 @@ function App()
     <div class="centered">    
      <Router>
         <Routes>  
-          <Route exact path="/" element={<SigninForm />} />        
+          //The home page is for sign in
+          <Route exact path="/" element={<SigninForm />} />  
+          //The SignupForm page is for sign up      
           <Route path="/SignupForm" element={<SignupForm/>} />
         </Routes>
-     </Router>  
+    </Router>  
     </div>
   )
   
