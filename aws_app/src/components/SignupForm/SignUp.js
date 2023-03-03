@@ -1,21 +1,38 @@
 import { useState } from 'react';
 import React from "react";
 import { Link } from "react-router-dom";
+import axios from 'axios';
+
 export function SignupForm() 
 {
-     const [email, setEmail] = useState('');
-     const [password, setPassword] = useState('');
-     const [message1, setMessage1] = useState('');
-     const [message2, setMessage2] = useState('');
-
-     const handleSubmit = (event) => {
-         event.preventDefault();
-
-     setMessage1(`Email is ${email}`);
-     setEmail('');
-     setMessage2(`Password is ${password}`);
-     setPassword('');
-  };
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [message1, setMessage1] = useState('');
+    const [message2, setMessage2] = useState('');
+  
+    const signUp = async (email, password) => {
+      try {
+        const response = await axios.put(
+          "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
+          { email, password }
+        );
+        console.log(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
+    const handleSubmit = (event) => {
+      event.preventDefault();
+  
+      setMessage1(`Email is ${email}`);
+      setEmail('');
+      setMessage2(`Password is ${password}`);
+      setPassword('');
+  
+      // Call the signUp function with the email and password the user registered
+      signUp(email, password);
+    };
     return (
         <form onSubmit={handleSubmit}>
              <h1>Please Sign Up</h1>                  
