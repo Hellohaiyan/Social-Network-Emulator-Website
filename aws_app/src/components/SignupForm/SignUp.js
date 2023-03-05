@@ -14,7 +14,7 @@ export function SignupForm()
       try {
         const response = await axios.put(
           "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
-          { email, password }
+          {"email": email, "password": password}
         );
         console.log(response.data);
       } catch (error) {
