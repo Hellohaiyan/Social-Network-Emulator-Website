@@ -9,14 +9,21 @@ import {
   Route,
 } from "react-router-dom";
 
-function App() 
-{
-  axios('https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users').then(function (res) {
-    console.log(res)
-  });
-  axios('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users').then(function (res) {
-    console.log(res)
-  });
+function App() {
+  
+  const userData = {"email": "bannu","password": "teja","public_key":"123",
+
+    // Add the data you want to update here
+  }
+
+  axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', userData)
+    .then(function (res) {
+      console.log(res)
+    })
+    .catch(function (error) {
+      console.log(error)
+    });
+
 
   return (
     <div class="centered">    
