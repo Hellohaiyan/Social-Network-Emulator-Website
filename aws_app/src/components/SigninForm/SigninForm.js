@@ -9,16 +9,13 @@ export function SigninForm ()
 {
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
-   const [message1, setMessage1] = useState('');
-   const [message2, setMessage2] = useState('');
 
    const authenticate = async () => {
     try {
-      const response = await axios.post(
-        `https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users`,
+      const response = await axios.get(
+        "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
         {
-          email,
-          password,
+         "email": email, "password": password
         },
         {
           headers: 
@@ -29,6 +26,7 @@ export function SigninForm ()
       );
   
       console.log("Response:", response.data);
+     
     } 
 
     catch (error) 
@@ -39,11 +37,6 @@ export function SigninForm ()
   
   const handleSubmit = async (event) =>{
      event.preventDefault();
-
-     setMessage1(`Email is ${email}`);
-     setEmail('');
-     setMessage2(`Password is ${password}`);
-     setPassword('');
      try {
        await authenticate();
        setEmail('');
@@ -84,8 +77,9 @@ export function SigninForm ()
          <Link to="/SignupForm">Dont have an account? Sign Up</Link>    
          <br />
          <br />
-         <h2>{message1}</h2>
-         <h3>{message2}</h3>
+         <Link to="/Post">Post something</Link>    
+         <br />
+         <br />
        </form>
     )
   }

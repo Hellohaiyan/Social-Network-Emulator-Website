@@ -2,6 +2,7 @@ import './App.css';
 import React from 'react';
 import {SignupForm} from './components/SignupForm/SignUp.js';
 import {SigninForm} from './components/SigninForm/SigninForm.js';
+import {Post} from './components/Post/Post.js';
 import axios from 'axios';
 import {
   BrowserRouter as Router,
@@ -19,15 +20,17 @@ function App()
   });
 
   return (
-    <div class="centered">    
+    <div className="centered">    
      <Router>
         <Routes>  
-          //The home page is for sign in
-          <Route exact path="/" element={<SigninForm />} />  
-          //The SignupForm page is for sign up      
-          <Route path="/SignupForm" element={<SignupForm/>} />
+           //The home page is for sign in
+           <Route exact path="/" element={<SigninForm />} />  
+           //The SignupForm page is for sign up      
+           <Route path="/SignupForm" element={<SignupForm/>} />
+           //The Post page is for post
+           <Route path="/Post" element={<Post/>} />
         </Routes>
-    </Router>  
+     </Router>  
     </div>
   )
   

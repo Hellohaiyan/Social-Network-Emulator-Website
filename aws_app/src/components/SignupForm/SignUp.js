@@ -7,8 +7,6 @@ export function SignupForm()
 {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [message1, setMessage1] = useState('');
-    const [message2, setMessage2] = useState('');
   
     const signUp = async (email, password) => {
       try {
@@ -25,10 +23,6 @@ export function SignupForm()
     const handleSubmit = (event) => {
       event.preventDefault();
   
-      setMessage1(`Email is ${email}`);
-      setEmail('');
-      setMessage2(`Password is ${password}`);
-      setPassword('');
   
       // Call the signUp function with the email and password the user registered
       signUp(email, password);
@@ -66,8 +60,6 @@ export function SignupForm()
                  <br />
                  <br />
                  <Link to="/">Already have an account? Sign In here</Link>  
-             <h2>{message1}</h2>
-             <h3>{message2}</h3>
         </form>
     )
 }
