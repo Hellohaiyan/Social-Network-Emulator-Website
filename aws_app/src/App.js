@@ -60,6 +60,8 @@ function App() {
           <Route exact path="/" element={<SigninForm />} />  
           {/* The SignupForm page is for sign up     */}
           <Route path="/SignupForm" element={<SignupForm/>} />
+          {/* The Post page is for post     */}
+          <Route path="/Post" element={<Post/>} />
         </Routes>
      </Router>  
     </div>
