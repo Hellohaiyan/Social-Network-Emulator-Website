@@ -113,7 +113,7 @@ export function SignupForm()
             "password": base64Password,
             "email": base64Email,
             "sharedKey": sharedKey,
-            "clinetPublicKey": clientPublicKey
+            "clientPublicKey": clientPublicKey
           });
           console.log(response.data);
         } catch (error) {
