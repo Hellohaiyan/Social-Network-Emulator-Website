@@ -56,19 +56,10 @@ function App() {
     <div className="centered">    
      <Router>
         <Routes>  
-<<<<<<< HEAD
-           //The home page is for sign in
-           <Route exact path="/" element={<SigninForm />} />  
-           //The SignupForm page is for sign up      
-           <Route path="/SignupForm" element={<SignupForm/>} />
-           //The Post page is for post
-           <Route path="/Post" element={<Post/>} />
-=======
           {/* The home page is for sign in */}
           <Route exact path="/" element={<SigninForm />} />  
           {/* The SignupForm page is for sign up     */}
           <Route path="/SignupForm" element={<SignupForm/>} />
->>>>>>> 9bab83dcf347377688acf4a2f3dda8622b769994
         </Routes>
      </Router>  
     </div>
