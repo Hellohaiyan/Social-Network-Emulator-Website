@@ -5,28 +5,129 @@ import axios from 'axios';
 
 export function SignupForm() 
 {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-  
-    const signUp = async (email, password) => {
-      try {
-        const response = await axios.put(
-          "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
-          {"email": email, "password": password}
-        );
-        console.log(response.data);
-      } catch (error) {
-        console.error(error);
+     const [email, setEmail] = useState('');
+     const [password, setPassword] = useState('');
+
+    // Check local storage public/private key 
+     let publicKey = localStorage.getItem('publicKey');
+     let privateKey = localStorage.getItem('privateKey');
+
+    // If keys don't exist, create and store them
+     if (!publicKey || !privateKey) 
+     {
+       const { publicKey, privateKey } = generateKeys();
+       localStorage.setItem('publicKey', publicKey);
+       localStorage.setItem('privateKey', privateKey);
+     }
+
+    // Function to generate key pair
+     function generateKeys() 
+     {
+            return crypto.subtle.generateKey({
+                name: 'RSA-OAEP',
+                modulusLength: 2048,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: 'SHA-256'
+            }, true, ['encrypt', 'decrypt']);
+     }
+    
+      // Helper function to convert ArrayBuffer to base64
+      function arrayBufferToBase64(buffer) 
+      {
+            const binary = String.fromCharCode(...new Uint8Array(buffer));
+            return btoa(binary);
       }
-    };
-  
+
+      // Function to perform Diffie-Hellman key exchange and generate shared key
+      async function performKeyExchange(publicKey, privateKey) 
+      {
+        // Fetch public key from PDS
+        const response = await axios.get("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey");
+        const pdsPublicKey = await crypto.subtle.importKey('spki', new Uint8Array(response.data), {
+            name: 'RSA-OAEP',
+            hash: 'SHA-256'
+        }, false, ['encrypt']);
+
+        // Generate client's public and private keys for Diffie-Hellman key exchange
+        const { publicKey: clientPublicKey, privateKey: clientPrivateKey } = await crypto.subtle.generateKey({
+            name: 'ECDH',
+            namedCurve: 'P-384'
+        }, true, ['deriveBits']);
+
+        // Export client's public key
+        const exportedClientPublicKey = await crypto.subtle.exportKey('spki', clientPublicKey);
+        const clientPublicKeyBase64 = arrayBufferToBase64(exportedClientPublicKey);
+
+        // Derive shared key using client's private key and PDS public key
+        const sharedBits = await crypto.subtle.deriveBits({
+            name: 'ECDH',
+            public: pdsPublicKey
+        }, clientPrivateKey, 256);
+
+        // Store shared key in local storage
+        localStorage.setItem('sharedKey', arrayBufferToBase64(sharedBits));
+
+        return clientPublicKeyBase64;
+      }
+
+      //Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
+      const signUp = async (email, password) => {
+        try {
+          //send the user's email and password in plain text to SNE
+          const response = await axios.put(
+            "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
+            {"email": email, "password": password}
+          );
+          console.log(response.data);
+        } catch (error) {
+          console.error(error);
+        }
+        try {
+          // Generate shared key and client public key
+           const sharedKey = await performKeyExchange(publicKey, privateKey);
+      
+          // Encrypt email and password with shared key
+           const encodedEmail = new TextEncoder().encode(email);
+           const encryptedEmail = await crypto.subtle.encrypt({
+            name: 'AES-GCM',
+            iv: crypto.getRandomValues(new Uint8Array(12)),
+            tagLength: 128
+          }, sharedKey, encodedEmail);
+      
+          const encodedPassword = new TextEncoder().encode(password);
+          const encryptedPassword = await crypto.subtle.encrypt({
+            name: 'AES-GCM',
+            iv: crypto.getRandomValues(new Uint8Array(12)),
+            tagLength: 128
+          }, sharedKey, encodedPassword);
+      
+          // Convert encrypted email and password to base64 strings
+          const base64Email = arrayBufferToBase64(encryptedEmail);
+          const base64Password = arrayBufferToBase64(encryptedPassword);
+      
+          // Get client public key in base64 format
+          const clientPublicKey = arrayBufferToBase64(publicKey);
+      
+          // Send encrypted email, password, and client public key to PDS
+          const response = await axios.post('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', {
+            "password": base64Password,
+            "email": base64Email,
+            "sharedKey": sharedKey,
+            "clinetPublicKey": clientPublicKey
+          });
+          console.log(response.data);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+     //function that calls a signUp function to perform the encryption and send the data to the server.
     const handleSubmit = (event) => {
       event.preventDefault();
-  
-  
       // Call the signUp function with the email and password the user registered
       signUp(email, password);
     };
+
     return (
         <form onSubmit={handleSubmit}>
              <h1>Please Sign Up</h1>                  
