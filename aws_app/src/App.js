@@ -12,17 +12,17 @@ import {
 
 function App() {
 
-  axios("https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users").then(function (res) {
-    console.log(res)
-  });
+  // axios("https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users").then(function (res) {
+  //   console.log(res)
+  // });
 
-  axios("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users").then(function (res) {
-    console.log(res)
-  });
+  // axios("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users").then(function (res) {
+  //   console.log(res)
+  // });
 
-  axios("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey").then(function (res) {
-    console.log(res)
-  });
+  // axios("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey").then(function (res) {
+  //   console.log(res)
+  // });
   
   // const userData = {
   //   "email":"test@csus.edu",
