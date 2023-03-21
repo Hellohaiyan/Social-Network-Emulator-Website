@@ -10,7 +10,7 @@ function arrayBufferToBase64(buffer)
 {
     const binaryStr = String.fromCharCode.apply(null, new Uint8Array(buffer));
     const base64Str = window.btoa(binaryStr);
-    return base64Str
+    return base64Str;
 }
 
 // Helper function to convert a base64 ASCII string to an ArrayBuffer
@@ -103,7 +103,7 @@ export function SignupForm()
         const base64IV = arrayBufferToBase64(iv);
     
         // Convert client public key from Crypto Key to base64 ASCII string
-        const arrayBufferPublicKey = await window.crypto.subtle.exportKey("spki", publicKey);
+        const arrayBufferPublicKey = await crypto.subtle.exportKey("spki", publicKey);
         const base64PublicKey = arrayBufferToBase64(arrayBufferPublicKey);
     
         // Send encrypted email, password, client public key, and IV to PDS
