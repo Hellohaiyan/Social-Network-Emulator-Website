@@ -5,39 +5,36 @@ import axios from 'axios';
 
 
 
-// Helper function to convert ArrayBuffer to base64
+// Helper function to convert ArrayBuffer to base64 ASCII string
 function arrayBufferToBase64(buffer) 
 {
-    const binary = String.fromCharCode(...new Uint8Array(buffer));
-    return window.btoa(binary);
+    const binaryStr = String.fromCharCode.apply(null, new Uint8Array(buffer));
+    const base64Str = window.btoa(binaryStr);
+    return base64Str
 }
 
-// Helper function to convert a string to an array buffer
-function str2ArrayBuffer(str) {
-    const buf = new ArrayBuffer(str.length);
+// Helper function to convert a base64 ASCII string to an ArrayBuffer
+function base64ToArrayBuffer(str) {
+    const binaryStr = window.atob(str);
+    const buf = new ArrayBuffer(binaryStr.length);
     const bufView = new Uint8Array(buf);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
+    for (let i = 0, binaryStrLen = binaryStr.length; i < binaryStrLen; i++) {
+        bufView[i] = binaryStr.charCodeAt(i);
     }
     return buf;
 }
 
-// Helper function to import a PEM key 
-function importPemKey(pem) {
-    // Fetch the part of the PEM string between header and footer
-    const pemHeader = "-----BEGIN PUBLIC KEY-----";
-    const pemFooter = "-----END PUBLIC KEY-----";
-    const pemContents = pem.substring(
-        pemHeader.length,
-        pem.length - pemFooter.length
-    );
+// Helper function to convert pds public key to a CryptoKey
+async function importPdsPublicKey() {
+    var publicKey = await axios.get("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey");
+    publicKey = publicKey.data;
 
-    // Base64 decode the string to get the binary data
-    const binaryDerString = window.atob(pemContents);
+    // Convert from a base64 ASCII string to an ArrayBuffer
+    const arrayBufferPublicKey = base64ToArrayBuffer(publicKey);
 
-    // Convert from a binary string to an ArrayBuffer
-    const binaryDer = str2ArrayBuffer(binaryDerString);
-    return binaryDer;
+    // Convert ArrayBuffer to CryptoKey
+    const pdsPublicKey = await crypto.subtle.importKey('spki', arrayBufferPublicKey, {name: "ECDH", namedCurve: "P-384"}, false, []);
+    return pdsPublicKey;
 }
 
 // Helper function to perform Diffie-Hellman shared key generation
@@ -55,9 +52,7 @@ async function createSharedKey()
     const privateKey = clientKeyPair.privateKey;
 
     // Fetch public key from PDS
-    const response = await axios.get("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey");
-    const keyArrayBuffer = importPemKey(response.data.trim())
-    const pdsPublicKey = await crypto.subtle.importKey('spki', keyArrayBuffer, {name: "ECDH", namedCurve: "P-384"}, false, []);
+    const pdsPublicKey = await importPdsPublicKey()
 
     // Derive shared key using client's private key and PDS public key
     const sharedKey = await crypto.subtle.deriveKey(
@@ -82,45 +77,44 @@ export function SignupForm()
     const [password, setPassword] = useState('');
 
     // Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
-    const signUp = async (email, password) => {
+    const signUp = async () => {
         // Send the user's email and password to SNE
-        await axios.put(
-            "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
+        await axios.put("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
             {"email": email, "password": password}
         );
         
         // Generate diffie hellman shared key
         const { publicKey, privateKey, sharedKey } = await createSharedKey();
     
-        // Encrypt email and password with shared key
-        const encodedEmail = new TextEncoder().encode(email);
-        const encryptedEmail = await crypto.subtle.encrypt({
-            name: 'AES-GCM',
-            iv: crypto.getRandomValues(new Uint8Array(12)),
-            tagLength: 128
-        }, sharedKey, encodedEmail);
-
-        const encodedPassword = new TextEncoder().encode(password);
-        const encryptedPassword = await crypto.subtle.encrypt({
-            name: 'AES-GCM',
-            iv: crypto.getRandomValues(new Uint8Array(12)),
-            tagLength: 128
-        }, sharedKey, encodedPassword);
+        // Encrypt password with shared key
+        const enc = new TextEncoder();
+        const encodedPassword = enc.encode(password);
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedPassword = await crypto.subtle.encrypt(
+            {
+                name: 'AES-GCM',
+                iv: iv
+            },
+            sharedKey, encodedPassword
+        );
     
-        // Convert encrypted email and password to base64 strings
-        const base64Email = arrayBufferToBase64(encryptedEmail);
+        // Convert encrypted password and IV from ArrayBuffers to base64 ASCII strings
         const base64Password = arrayBufferToBase64(encryptedPassword);
+        const base64IV = arrayBufferToBase64(iv);
     
-        // Get client public key in base64 format
-        const clientPublicKey = arrayBufferToBase64(publicKey);
+        // Convert client public key from Crypto Key to base64 ASCII string
+        const arrayBufferPublicKey = await window.crypto.subtle.exportKey("spki", publicKey);
+        const base64PublicKey = arrayBufferToBase64(arrayBufferPublicKey);
     
-        // Send encrypted email, password, and client public key to PDS
-        await axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', {
-            "password": base64Password,
-            "email": base64Email,
-            "sharedKey": sharedKey,
-            "clientPublicKey": clientPublicKey
-        });
+        // Send encrypted email, password, client public key, and IV to PDS
+        await axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', 
+            {
+                "email": email,    
+                "password": base64Password,
+                "clientPublicKey": base64PublicKey,
+                "IV": base64IV
+            }
+        );
 
         // Store client's public/private key pair and shared key in local storage
         localStorage.setItem('publicKey', publicKey);
@@ -131,7 +125,7 @@ export function SignupForm()
     // Function that calls a signUp function to perform the encryption and send the data to the servers.
     const handleSubmit = (event) => {
         event.preventDefault();
-        signUp(email, password);
+        signUp();
     };
 
     return (
