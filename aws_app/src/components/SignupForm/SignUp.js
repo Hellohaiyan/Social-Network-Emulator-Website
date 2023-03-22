@@ -27,7 +27,7 @@ function base64ToArrayBuffer(str) {
 // Helper function to convert pds public key to a CryptoKey
 async function importPdsPublicKey() {
     var publicKey = await axios.get("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey");
-    publicKey = publicKey.data;
+    publicKey = publicKey.data.publicKey;
 
     // Convert from a base64 ASCII string to an ArrayBuffer
     const arrayBufferPublicKey = base64ToArrayBuffer(publicKey);
@@ -38,9 +38,9 @@ async function importPdsPublicKey() {
 }
 
 // Helper function to perform Diffie-Hellman shared key generation
-async function createSharedKey() 
+async function createKeys() 
 {
-    // Generate client's public/private key pair
+    // Generate client's ECDH public/private key pair
     const clientKeyPair = await crypto.subtle.generateKey(
         {
             name: 'ECDH',
@@ -50,6 +50,19 @@ async function createSharedKey()
     );
     const publicKey = clientKeyPair.publicKey;
     const privateKey = clientKeyPair.privateKey;
+
+    // Generate client's RSA public/private key pair
+    const clientRsaKeyPair = await crypto.subtle.generateKey(
+        {
+            name: "RSA-OAEP",
+            modulusLength: 4096,
+            publicExponent: new Uint8Array([1, 0, 1]),
+            hash: "SHA-256"
+        },
+        true, ['encrypt', 'decrypt']
+    );
+    const rsaPublicKey = clientRsaKeyPair.publicKey;
+    const rsaPrivateKey = clientRsaKeyPair.privateKey;
 
     // Fetch public key from PDS
     const pdsPublicKey = await importPdsPublicKey()
@@ -63,12 +76,13 @@ async function createSharedKey()
         privateKey,
         {
             name: "AES-GCM",
+            namedCurve: "P-384",
             length: 256
         },
         false, ['encrypt', 'decrypt']
     );
 
-    return {publicKey, privateKey, sharedKey};
+    return {publicKey, privateKey, rsaPublicKey, rsaPrivateKey, sharedKey};
 }
 
 export function SignupForm() 
@@ -84,15 +98,15 @@ export function SignupForm()
         );
         
         // Generate diffie hellman shared key
-        const { publicKey, privateKey, sharedKey } = await createSharedKey();
+        const { publicKey, privateKey, rsaPublicKey, rsaPrivateKey, sharedKey } = await createKeys();
     
         // Encrypt password with shared key
-        const enc = new TextEncoder();
-        const encodedPassword = enc.encode(password);
+        const encodedPassword = base64ToArrayBuffer(password.trim());
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
         const encryptedPassword = await crypto.subtle.encrypt(
             {
                 name: 'AES-GCM',
+                namedCurve: "P-384",
                 iv: iv
             },
             sharedKey, encodedPassword
@@ -102,9 +116,12 @@ export function SignupForm()
         const base64Password = arrayBufferToBase64(encryptedPassword);
         const base64IV = arrayBufferToBase64(iv);
     
-        // Convert client public key from Crypto Key to base64 ASCII string
+        // Convert client public keys from Crypto Key to base64 ASCII string
         const arrayBufferPublicKey = await crypto.subtle.exportKey("spki", publicKey);
         const base64PublicKey = arrayBufferToBase64(arrayBufferPublicKey);
+
+        const arrayBufferRsaPublicKey = await crypto.subtle.exportKey("spki", rsaPublicKey);
+        const base64RsaPublicKey = arrayBufferToBase64(arrayBufferRsaPublicKey);
     
         // Send encrypted email, password, client public key, and IV to PDS
         await axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', 
@@ -112,13 +129,16 @@ export function SignupForm()
                 "email": email,    
                 "password": base64Password,
                 "clientPublicKey": base64PublicKey,
+                "clientRsaPublicKey": base64RsaPublicKey,
                 "IV": base64IV
             }
         );
 
-        // Store client's public/private key pair and shared key in local storage
+        // Store client's public/private key pairs and shared key in local storage
         localStorage.setItem('publicKey', publicKey);
         localStorage.setItem('privateKey', privateKey);
+        localStorage.setItem('rsaPublicKey', rsaPublicKey);
+        localStorage.setItem('rsaPrivateKey', rsaPrivateKey);
         localStorage.setItem('sharedKey', sharedKey);
     };
 
