@@ -1,9 +1,21 @@
-
-.centered {
-    height: 100vh; /* Magic here */
+#Waterfall {
+    height: 100vh;
+    width: 200vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgb(0, 187, 255);
-  }
+}
+
+.Navbar {
+    background-color: rgb(0, 200, 200);
+    position: sticky;
+    top: 0;
+}
+
+.Form {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
   

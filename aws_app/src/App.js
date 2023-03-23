@@ -1,9 +1,11 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import React from 'react';
-import {SignupForm} from './components/SignupForm/SignUp.js';
-import {SigninForm} from './components/SigninForm/SigninForm.js';
-import {Post} from './components/Post/Post.js';
-import axios from 'axios';
+import {Home} from './components/Home.js';
+import {Navigation} from './components/Navigation.js';
+import {Signup} from './components/SignUp.js';
+import {Signin} from './components/Signin.js';
+import {Post} from './components/Post.js';
 import {
     BrowserRouter as Router,
     Routes,
@@ -13,53 +15,15 @@ import {
 
 
 function App() {
-    // axios("https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users").then(function (res) {
-    //     console.log(res)
-    // });
-
-    // axios("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users").then(function (res) {
-    //     console.log(res)
-    // });
-
-    // axios("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey").then(function (res) {
-    //     console.log(res)
-    // });
-    
-    // const userData = {
-    //     "email":"test@csus.edu",
-    //     "password": "test",
-    //     "clientPublicKey":"testpkey",
-    //     "sharedKey":"testskey"
-    // }
-
-    // axios.put("https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users", userData).then(function (res) {
-    //     console.log(res)
-    // })
-
-    // const userData2 = {
-    //     "email":"test@csus.edu",
-    //     "password": "test",
-    // }
-    // axios.put("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users", userData2).then(function (res) {
-    //     console.log(res)
-    // })
-
-    // axios("https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/pds@csus.edu").then(function (res) {
-    //     console.log(res)
-    // });
-
-    // axios("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users/sne@csus.edu").then(function (res) {
-    //     console.log(res)
-    // });
-
-
     return (
-        <div className="centered">    
+        <div>
+            <Navigation/>    
             <Router>
-                <Routes>  
-                    <Route exact path="/" element={<SigninForm />} />  
-                    <Route path="/SignupForm" element={<SignupForm/>} />
-                    <Route path="/Post" element={<Post/>} />
+                <Routes>
+                    <Route exact path="/" element={<Home/>} /> 
+                    <Route exact path="/signin" element={<Signin/>} />  
+                    <Route path="/signup" element={<Signup/>} />
+                    <Route path="/post" element={<Post/>}/>
                 </Routes>
             </Router>  
         </div>

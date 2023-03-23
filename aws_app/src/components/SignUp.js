@@ -2,7 +2,9 @@ import { useState } from 'react';
 import React from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios';
-
+import Form from 'react-bootstrap/Form';
+import Container from 'react-bootstrap/Container';
+import Button from 'react-bootstrap/Button';
 
 
 // Helper function to convert ArrayBuffer to base64 ASCII string
@@ -90,10 +92,11 @@ async function createKeys()
     return {publicKey, privateKey, rsaPublicKey, rsaPrivateKey, sharedKey};
 }
 
-export function SignupForm() 
+export function Signup() 
 {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     // Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
     const signUp = async () => {
@@ -155,39 +158,43 @@ export function SignupForm()
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h1>Please Sign Up</h1>                  
-            <input type="email" 
-                className="form-control" 
-                id="email" 
-                aria-describedby="emailHelp" 
-                value = {email} 
-                placeholder="Enter email"
-                onChange = {(event) => setEmail(event.target.value)}
-            />
-            <br />
-            <br />
-            <input type="password" 
-                className="form-control" 
-                id="password" 
-                name ="password"
-                value = {password}
-                placeholder="Password"
-                onChange ={(event) => {setPassword(event.target.value)}}
-            /> 
-            <br />
-            <br />
-            <input type="password" 
-                className="form-control" 
-                id="confirmPassword" 
-                placeholder="Confirm Password"
-            />
-            <br />
-            <br />
-            <button type="submit" className="btn btn-primary">Sign up</button>
-            <br />
-            <br />
-            <Link to="/">Already have an account? Sign In here</Link>  
-        </form>
+        <Form className="Form" onSubmit={handleSubmit}>
+            <Container>
+                <h2 className='text-center'>Please Sign Up</h2>
+                <Form.Group className="mb-3">
+                    <Form.Label>Email address:</Form.Label>
+                    <Form.Control 
+                        type="email"
+                        name='email'
+                        placeholder="Enter email"
+                        value={email}
+                        onChange = {(event) => setEmail(event.target.value)}
+                    />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                    <Form.Label>Password:</Form.Label>
+                    <Form.Control
+                        type="password"
+                        name='password'
+                        placeholder="Enter password"
+                        value={password}
+                        onChange ={(event) => {setPassword(event.target.value)}}
+                    />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                    <Form.Label>Confirm Password:</Form.Label>
+                    <Form.Control
+                        type="password"
+                        name='confirmPassword'
+                        placeholder="Confirm password"
+                        value={confirmPassword}
+                        onChange ={(event) => {setConfirmPassword(event.target.value)}}
+                    />
+                </Form.Group>
+                <Button type='submit'>Sign Up</Button>
+                <br/>
+                <Link to="/signin">Already have an account? Sign in</Link> 
+            </Container>
+        </Form>
     )
 }
