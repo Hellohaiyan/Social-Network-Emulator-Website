@@ -24,6 +24,11 @@ function base64ToArrayBuffer(str) {
     return buf;
 }
 
+// Helper function to convert utf8/utf16 strings (Javascript default) to base 64 ASCII strings
+function utf8ToBase64(str) {
+    return window.btoa(encodeURIComponent(str));
+}
+
 // Helper function to convert pds public key to a CryptoKey
 async function importPdsPublicKey() {
     var publicKey = await axios.get("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey");
@@ -71,12 +76,12 @@ async function createKeys()
     const sharedKey = await crypto.subtle.deriveKey(
         {
             name: 'ECDH',
+            namedCurve: "P-384",
             public: pdsPublicKey
         },
         privateKey,
         {
             name: "AES-GCM",
-            namedCurve: "P-384",
             length: 256
         },
         false, ['encrypt', 'decrypt']
@@ -101,19 +106,20 @@ export function SignupForm()
         const { publicKey, privateKey, rsaPublicKey, rsaPrivateKey, sharedKey } = await createKeys();
     
         // Encrypt password with shared key
-        const encodedPassword = base64ToArrayBuffer(password.trim());
+        const base64Password = utf8ToBase64(password);
+        const encodedPassword = base64ToArrayBuffer(base64Password);
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
         const encryptedPassword = await crypto.subtle.encrypt(
             {
                 name: 'AES-GCM',
-                namedCurve: "P-384",
+                length: 256,
                 iv: iv
             },
             sharedKey, encodedPassword
         );
     
         // Convert encrypted password and IV from ArrayBuffers to base64 ASCII strings
-        const base64Password = arrayBufferToBase64(encryptedPassword);
+        const base64EncryptedPassword = arrayBufferToBase64(encryptedPassword);
         const base64IV = arrayBufferToBase64(iv);
     
         // Convert client public keys from Crypto Key to base64 ASCII string
@@ -127,7 +133,7 @@ export function SignupForm()
         await axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', 
             {
                 "email": email,    
-                "password": base64Password,
+                "password": base64EncryptedPassword,
                 "clientPublicKey": base64PublicKey,
                 "clientRsaPublicKey": base64RsaPublicKey,
                 "IV": base64IV
