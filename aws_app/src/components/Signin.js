@@ -10,6 +10,7 @@ export function Signin ()
 {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [authenticated, setAuthenticated] = useState(false);
 
     const authenticate = async () => {
@@ -65,12 +66,17 @@ export function Signin ()
                 <Form.Group className="mb-3">
                     <Form.Label>Password:</Form.Label>
                     <Form.Control
-                        type="password"
+                        type={showPassword ? "text" : "password"} // Set the input type based on showPassword state
                         name='password'
                         placeholder="Enter password"
                         value={password}
                         onChange ={(event) => {setPassword(event.target.value)}}
                     />
+                    <Form.Check
+                     type="checkbox"
+                     label="Show Password"
+                     onChange={() => setShowPassword(!showPassword)}
+                   />
                 </Form.Group>
                 <Button type='submit'>Sign in</Button>
                 <br/>
