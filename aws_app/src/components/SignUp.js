@@ -7,6 +7,7 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
 
+
 // Helper function to convert ArrayBuffer to base64 ASCII string
 function arrayBufferToBase64(buffer) 
 {
@@ -97,9 +98,26 @@ export function Signup()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  
+
 
     // Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
     const signUp = async () => {
+
+        try {
+            // Check if email has already been signed up
+            const response = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
+            if (response.data) {
+                // Email has already been signed up, show error message
+                alert('This email has already been signed up.');
+                return;
+            }
+        } catch (error) {
+            console.error(error);
+        }
         // Send the user's email and password to SNE
         await axios.put("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
             {"email": email, "password": password}
@@ -154,6 +172,14 @@ export function Signup()
     // Function that calls a signUp function to perform the encryption and send the data to the servers.
     const handleSubmit = (event) => {
         event.preventDefault();
+        
+        // Check if password and confirm password match
+        if (password !== confirmPassword) 
+        {
+             alert('Password and confirm password do not match.');
+             return;
+        }
+
         signUp();
     };
 
@@ -174,22 +200,32 @@ export function Signup()
                 <Form.Group className="mb-3">
                     <Form.Label>Password:</Form.Label>
                     <Form.Control
-                        type="password"
-                        name='password'
-                        placeholder="Enter password"
-                        value={password}
-                        onChange ={(event) => {setPassword(event.target.value)}}
-                    />
+                     type={showPassword ? "text" : "password"} // Set the input type based on showPassword state
+                     name="password"
+                     placeholder="Enter password"
+                     value={password}
+                     onChange={(event) => setPassword(event.target.value)}
+                   />
+                   <Form.Check
+                     type="checkbox"
+                     label="Show Password"
+                     onChange={() => setShowPassword(!showPassword)}
+                   />
                 </Form.Group>
                 <Form.Group className="mb-3">
                     <Form.Label>Confirm Password:</Form.Label>
                     <Form.Control
-                        type="password"
-                        name='confirmPassword'
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange ={(event) => {setConfirmPassword(event.target.value)}}
-                    />
+                     type={showConfirmPassword ? "text" : "password"}
+                     name='confirmPassword'
+                     placeholder="Confirm password"
+                     value={confirmPassword}
+                     onChange ={(event) => {setConfirmPassword(event.target.value)}}
+                 />
+                  <Form.Check
+                     type="checkbox"
+                     label="Show Password"
+                     onChange={() => setShowConfirmPassword(!showConfirmPassword)}
+                   />
                 </Form.Group>
                 <Button type='submit'>Sign Up</Button>
                 <br/>
