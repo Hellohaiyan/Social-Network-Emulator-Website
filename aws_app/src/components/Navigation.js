@@ -10,9 +10,9 @@ export function Navigation()
         <Container fluid>
         <Navbar.Brand href="/">Social Network Emulator</Navbar.Brand>
         <Nav className="ml-auto">
+            <Nav.Link href="/post">Post</Nav.Link>
             <Nav.Link href="/signin">Sign In</Nav.Link>
             <Nav.Link href="/signup">Sign Up</Nav.Link>
-            <Nav.Link href="/post">Post</Nav.Link>
         </Nav>
         </Container>
     </Navbar>

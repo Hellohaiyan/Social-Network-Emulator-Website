@@ -51,8 +51,8 @@ export function Signin ()
    
     return (
         <Form className="Form" onSubmit={handleSubmit}>
-            <Container>
-                <h2 className='text-center'>Please Sign In</h2>
+            <Container className='w-25'>
+                <h2 className='text-center'>Sign In</h2>
                 <Form.Group className="mb-3">
                     <Form.Label>Email address:</Form.Label>
                     <Form.Control 
@@ -73,14 +73,18 @@ export function Signin ()
                         onChange ={(event) => {setPassword(event.target.value)}}
                     />
                     <Form.Check
-                     type="checkbox"
-                     label="Show Password"
-                     onChange={() => setShowPassword(!showPassword)}
-                   />
+                        type="checkbox"
+                        label="Show Password"
+                        onChange={() => setShowPassword(!showPassword)}
+                        className='mt-2'
+                    />
                 </Form.Group>
-                <Button type='submit'>Sign in</Button>
-                <br/>
-                <Link to="/signup">Don't have an account? Sign Up</Link> 
+                <div className='text-center'>
+                    <Button type='submit'>Sign in</Button>
+                </div>
+                <div className='text-center Link'>
+                    <Link to="/signup">Don't have an account? Sign Up</Link> 
+                </div>
             </Container>
         </Form>
     )
