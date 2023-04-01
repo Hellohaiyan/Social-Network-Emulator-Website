@@ -15,15 +15,17 @@ import {
 
 
 function App() {
+    const loggedIn = localStorage.getItem('email');
+
     return (
         <div>
             <Navigation/>    
             <Router>
                 <Routes>
-                    <Route exact path="/" element={<Home/>} /> 
-                    <Route exact path="/signin" element={<Signin/>} />  
-                    <Route path="/signup" element={<Signup/>} />
-                    <Route path="/post" element={<Post/>}/>
+                    <Route exact path="/" element={<Home/>}/> 
+                    <Route exact path="/signin" element={<Signin/>}/>  
+                    <Route path="/signup" element={<Signup/>}/>
+                    <Route path="/post" element={loggedIn ? (<Post/>): (<Signin/>)}/>
                 </Routes>
             </Router>  
         </div>

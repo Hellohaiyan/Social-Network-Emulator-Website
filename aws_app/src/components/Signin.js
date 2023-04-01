@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import React from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from 'axios';
 import Form from 'react-bootstrap/Form';
 import Container from 'react-bootstrap/Container';
@@ -11,7 +11,6 @@ export function Signin ()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [authenticated, setAuthenticated] = useState(false);
 
     const authenticate = async () => {
         // Fetch user data from SNE table
@@ -22,9 +21,8 @@ export function Signin ()
         // Check if email and password match
         const userData = response.data.find(user => user.email === email && user.password === password);
       
-        // If user data is found, set authenticated to true and store email in local storage
+        // If user data is found, store email in local storage
         if (userData) {
-            setAuthenticated(true);
             localStorage.setItem('email', email);
         } else {
             alert('Invalid email or password. Please try again.');
@@ -33,21 +31,11 @@ export function Signin ()
   
     const handleSubmit = async (event) =>{
         event.preventDefault();
-        try {
-            await authenticate();
-            setEmail('');
-            setPassword('');
-        } 
-        catch (error)
-        {
-            alert('There was an error submitting the form. Please try again.');
-        }
+        await authenticate();
+        setEmail('');
+        setPassword('');
+        window.location.assign("/post");
     };
-
-    // Redirect to post page if authenticated
-    if (authenticated) {
-        return <Navigate to="/post"/>;
-    }
    
     return (
         <Form className="Form" onSubmit={handleSubmit}>
