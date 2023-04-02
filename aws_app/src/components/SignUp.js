@@ -107,17 +107,13 @@ export function Signup()
     // Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
     const signUp = async () => {
 
-        try {
-            // Check if email has already been signed up
-            const response = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
-            if (response.data) {
-                // Email has already been signed up, show error message
-                alert('This email has already been signed up.');
-                return;
-            }
-        } catch (error) {
-            console.error(error);
+        // Check if email has already been signed up
+        const response = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
+        if (response.data) {
+            alert('This email has already been signed up.');
+            return;
         }
+
         // Send the user's email and password to SNE
         await axios.put("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
             {"email": email, "password": password}
@@ -185,8 +181,8 @@ export function Signup()
 
     return (
         <Form className="Form" onSubmit={handleSubmit}>
-            <Container>
-                <h2 className='text-center'>Please Sign Up</h2>
+            <Container className='w-25'>
+                <h2 className='text-center'>Sign Up</h2>
                 <Form.Group className="mb-3">
                     <Form.Label>Email address:</Form.Label>
                     <Form.Control 
@@ -200,36 +196,41 @@ export function Signup()
                 <Form.Group className="mb-3">
                     <Form.Label>Password:</Form.Label>
                     <Form.Control
-                     type={showPassword ? "text" : "password"} // Set the input type based on showPassword state
-                     name="password"
-                     placeholder="Enter password"
-                     value={password}
-                     onChange={(event) => setPassword(event.target.value)}
-                   />
-                   <Form.Check
-                     type="checkbox"
-                     label="Show Password"
-                     onChange={() => setShowPassword(!showPassword)}
-                   />
+                        type={showPassword ? "text" : "password"} // Set the input type based on showPassword state
+                        name="password"
+                        placeholder="Enter password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                    />
+                    <Form.Check
+                        type="checkbox"
+                        label="Show Password"
+                        onChange={() => setShowPassword(!showPassword)}
+                        className='mt-2'
+                    />
                 </Form.Group>
                 <Form.Group className="mb-3">
                     <Form.Label>Confirm Password:</Form.Label>
                     <Form.Control
-                     type={showConfirmPassword ? "text" : "password"}
-                     name='confirmPassword'
-                     placeholder="Confirm password"
-                     value={confirmPassword}
-                     onChange ={(event) => {setConfirmPassword(event.target.value)}}
-                 />
-                  <Form.Check
-                     type="checkbox"
-                     label="Show Password"
-                     onChange={() => setShowConfirmPassword(!showConfirmPassword)}
-                   />
+                        type={showConfirmPassword ? "text" : "password"}
+                        name='confirmPassword'
+                        placeholder="Confirm password"
+                        value={confirmPassword}
+                        onChange ={(event) => {setConfirmPassword(event.target.value)}}
+                    />
+                    <Form.Check
+                        type="checkbox"
+                        label="Show Password"
+                        onChange={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className='mt-2'
+                    />
                 </Form.Group>
-                <Button type='submit'>Sign Up</Button>
-                <br/>
-                <Link to="/signin">Already have an account? Sign in</Link> 
+                <div className='text-center'>
+                    <Button type='submit'>Sign Up</Button>
+                </div>
+                <div className='text-center Link'>
+                    <Link to="/signin">Already have an account? Sign in</Link>
+                </div>
             </Container>
         </Form>
     )

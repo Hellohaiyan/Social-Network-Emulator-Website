@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import React from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from 'axios';
 import Form from 'react-bootstrap/Form';
 import Container from 'react-bootstrap/Container';
@@ -11,7 +11,6 @@ export function Signin ()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [authenticated, setAuthenticated] = useState(false);
 
     const authenticate = async () => {
         // Fetch user data from SNE table
@@ -22,9 +21,8 @@ export function Signin ()
         // Check if email and password match
         const userData = response.data.find(user => user.email === email && user.password === password);
       
-        // If user data is found, set authenticated to true and store email in local storage
+        // If user data is found, store email in local storage
         if (userData) {
-            setAuthenticated(true);
             localStorage.setItem('email', email);
         } else {
             alert('Invalid email or password. Please try again.');
@@ -33,26 +31,16 @@ export function Signin ()
   
     const handleSubmit = async (event) =>{
         event.preventDefault();
-        try {
-            await authenticate();
-            setEmail('');
-            setPassword('');
-        } 
-        catch (error)
-        {
-            alert('There was an error submitting the form. Please try again.');
-        }
+        await authenticate();
+        setEmail('');
+        setPassword('');
+        window.location.assign("/post");
     };
-
-    // Redirect to post page if authenticated
-    if (authenticated) {
-        return <Navigate to="/post"/>;
-    }
    
     return (
         <Form className="Form" onSubmit={handleSubmit}>
-            <Container>
-                <h2 className='text-center'>Please Sign In</h2>
+            <Container className='w-25'>
+                <h2 className='text-center'>Sign In</h2>
                 <Form.Group className="mb-3">
                     <Form.Label>Email address:</Form.Label>
                     <Form.Control 
@@ -73,14 +61,18 @@ export function Signin ()
                         onChange ={(event) => {setPassword(event.target.value)}}
                     />
                     <Form.Check
-                     type="checkbox"
-                     label="Show Password"
-                     onChange={() => setShowPassword(!showPassword)}
-                   />
+                        type="checkbox"
+                        label="Show Password"
+                        onChange={() => setShowPassword(!showPassword)}
+                        className='mt-2'
+                    />
                 </Form.Group>
-                <Button type='submit'>Sign in</Button>
-                <br/>
-                <Link to="/signup">Don't have an account? Sign Up</Link> 
+                <div className='text-center'>
+                    <Button type='submit'>Sign in</Button>
+                </div>
+                <div className='text-center Link'>
+                    <Link to="/signup">Don't have an account? Sign Up</Link> 
+                </div>
             </Container>
         </Form>
     )
