@@ -2,26 +2,31 @@ import { useState, useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 
 
-// Helper function to create digital signature of post using user's private key
-async function signPost(privateKey, post) {
-    // Encode the post as a Uint8Array
-    const postBuffer = new TextEncoder().encode(post);
 
-    // Calculate the SHA-256 hash of the post
-    const digest = await crypto.subtle.digest('SHA-256', postBuffer);
+// Helper function to convert ArrayBuffer to base64 ASCII string
+function arrayBufferToBase64(buffer) 
+{
+    const binaryStr = String.fromCharCode.apply(null, new Uint8Array(buffer));
+    const base64Str = window.btoa(binaryStr);
+    return base64Str;
+}
 
-    // Sign the hash using the private key
-    const signature = await crypto.subtle.sign({ name: 'RSASSA-PKCS1-v1_5' }, privateKey, digest);
+// Helper function to convert a base64 ASCII string to an ArrayBuffer
+function base64ToArrayBuffer(str) {
+    const binaryStr = window.atob(str);
+    const buf = new ArrayBuffer(binaryStr.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, binaryStrLen = binaryStr.length; i < binaryStrLen; i++) {
+        bufView[i] = binaryStr.charCodeAt(i);
+    }
+    return buf;
+}
 
-    // Convert the signature to a base64-encoded string
-    const binaryStr = String.fromCharCode.apply(null, new Uint8Array(signature));
-
-    const signatureString = window.btoa(binaryStr);
-
-    return signatureString;
+// Helper function to convert utf8/utf16 strings (Javascript default) to base 64 ASCII strings
+function utf8ToBase64(str) {
+    return window.btoa(encodeURIComponent(str));
 }
 
 export function Post() {
@@ -50,26 +55,43 @@ export function Post() {
 
 
     const handlePost = async () => {
-        try {
-          // Get the private key from local storage
-          const privateKey = await crypto.subtle.importKey(
-            'jwk',
-            JSON.parse(localStorage.getItem('rsaPrivateKey')),
-            { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-            true,
-            ['sign']
-          );
-    
-          // Create the digital signature of the post using the private key
-          const signature = await signPost(privateKey, content);
-          setPostSignature(signature);
-        } catch (error) {
-          console.error(error);
-        }
 
-       // Generate a new post id and set it to the state variable
+        const base64PrivateKey = localStorage.getItem('rsaPrivateKey');
+        const arrayBufferPrivateKey = base64ToArrayBuffer(base64PrivateKey);
+
+        const privateKey = await crypto.subtle.importKey(
+           'pkcs8',
+             arrayBufferPrivateKey,
+             { name: 'RSA-OAEP', hash: 'SHA-256' },
+             true,
+             ['decrypt']
+        );
+
+        // Encrypt post content with rsaPrivateKey
+        const base64Content = utf8ToBase64(content);
+        const encodedContent = base64ToArrayBuffer(base64Content);
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedContent = await crypto.subtle.encrypt(
+        {
+            name: 'AES-GCM',
+            length: 256,
+            iv: iv
+         },
+            privateKey, encodedContent
+        );
+    
+        // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
+        const base64EncryptedContent = arrayBufferToBase64(encryptedContent);
+        const base64IV = arrayBufferToBase64(iv);
+       
+      
+       // Fetch data from the PDS API and get the total number of existing posts
+       const response = await axios.get('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/posts');
+       const numExistingPosts = response.data.length;
+
+       // Create a new post ID based on the number of existing posts
        // Also create the URL for the new post using the generated post id
-       const newPostId = uuidv4();
+       const newPostId = `post ${numExistingPosts + 1}`;
        setPostId(newPostId);
        const postURL = `https://agx9exeaue.execute-api.us-west-1.amazonaws.com/posts/${newPostId}`;   
 
@@ -79,7 +101,8 @@ export function Post() {
                 "postId": newPostId,   
                 "email": email,
                 "post": content,
-                "postDS": postSignature
+                "postDS": base64EncryptedContent,
+                "IV": base64IV
             }
         );
        
@@ -87,17 +110,12 @@ export function Post() {
        await axios.put('https://agx9exeaue.execute-api.us-west-1.amazonaws.com/posts', {
           "postId": newPostId,
           "email": email,
-          "postDS": postSignature,
-          "serviceURL": postURL
+          "postDS": base64EncryptedContent,
+          "serviceURL": postURL,
+          "IV": base64IV
         })
-      .then(response => {
-         setPostUrls(prevUrls => [...prevUrls, postURL]);
-         setPostId('');
-         
-       })
-        .catch(error => console.log(error));
+      
     }
-    
  
     const handleSubmit = (event) => {
         event.preventDefault();   
