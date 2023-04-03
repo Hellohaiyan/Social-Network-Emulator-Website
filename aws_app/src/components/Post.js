@@ -30,12 +30,10 @@ function utf8ToBase64(str) {
 
 export function Post() {
     const [postId, setPostId] = useState('');
-    const [postUrls, setPostUrls] = useState([]);
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
     const [postSignature, setPostSignature] = useState('');
-
 
     // Fetch all existing postids from SNE and set them to the state variable
     useEffect(() => {
@@ -76,7 +74,7 @@ export function Post() {
 
         //digest the post content
         const digestPost = digestMessage(content);
-        
+
         // Encrypt digest(post) with rsaPrivateKey
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
         const encryptedDigest = await crypto.subtle.encrypt(
@@ -90,6 +88,7 @@ export function Post() {
 
         // Convert encrypted digest(post) from ArrayBuffers to base64 ASCII strings
         const base64EncryptedDigest = arrayBufferToBase64(encryptedDigest);
+        setPostSignature(base64EncryptedDigest);
 
         // Encrypt post content with sharedKey
         const base64Content = utf8ToBase64(content);
@@ -117,19 +116,19 @@ export function Post() {
         // Send the post data to PDS
         await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
             {
-                "postId": newPostId,   
+                "postId": postId,   
                 "email": email,
                 "post": base64EncryptedContent,
-                "postDS": base64EncryptedDigest,
+                "postDS": postSignature,
                 "IV": base64IV
             }
         );
        
         //Send the post data to SNE
         await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', {
-          "postId": newPostId,
+          "postId": postId,
           "email": email,
-          "postDS": base64EncryptedDigest,
+          "postDS": postSignature,
           "IV": base64IV
         })
       
