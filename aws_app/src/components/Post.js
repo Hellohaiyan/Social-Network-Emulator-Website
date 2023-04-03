@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
-import axios from 'axios';
-
 
 
 // Helper function to convert ArrayBuffer to base64 ASCII string
@@ -34,16 +33,20 @@ export function Post() {
     const [postUrls, setPostUrls] = useState([]);
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
+    const [postIds, setPostIds] = useState([]);
     const [postSignature, setPostSignature] = useState('');
 
-    //Set the base URL of the API
-    const baseUrl = 'https://agx9exeaue.execute-api.us-west-1.amazonaws.com/posts/';
 
-    // Fetch all existing post URLs and set them to the state variable
+    // Fetch all existing postids from SNE and set them to the state variable
     useEffect(() => {
-       axios.get('https://agx9exeaue.execute-api.us-west-1.amazonaws.com/posts')
-      .then(response => setPostUrls(response.data))
-      .catch(error => console.log(error));
+        const fetchPostIds = async () => {
+        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
+        const postData = response.data;
+        const postIds = postData.map(post => post.postId);
+        setPostIds(postIds.sort());
+        };
+        fetchPostIds();
+      
       
       // Fetch the user's email address from local storage and set it to the state variable
       const userEmail = localStorage.getItem('email');
@@ -55,63 +58,78 @@ export function Post() {
 
 
     const handlePost = async () => {
+        
+        // Fetch the sharedKey and rsaPrivateKey from local storage
+        const sharedKey = localStorage.getItem('sharedKey');
+        const rsaPrivateKey = localStorage.getItem('rsaPrivateKey');
+        
+        console.log(sharedKey);
+        console.log(rsaPrivateKey);
+        
+        //function to digest the post content
+        async function digestMessage(post) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(post);
+            const hash = await crypto.subtle.digest("SHA-256", data);
+            return hash;
+        }
 
-        const base64PrivateKey = localStorage.getItem('rsaPrivateKey');
-        const arrayBufferPrivateKey = base64ToArrayBuffer(base64PrivateKey);
-
-        const privateKey = await crypto.subtle.importKey(
-           'pkcs8',
-             arrayBufferPrivateKey,
-             { name: 'RSA-OAEP', hash: 'SHA-256' },
-             true,
-             ['decrypt']
+        //digest the post content
+        const digestPost = digestMessage(content);
+        
+        // Encrypt digest(post) with rsaPrivateKey
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedDigest = await crypto.subtle.encrypt(
+          {
+             name: "RSA-OAEP",
+             length: 4096,
+             iv: iv 
+          },
+          rsaPrivateKey,  digestPost
         );
 
-        // Encrypt post content with rsaPrivateKey
+        // Convert encrypted digest(post) from ArrayBuffers to base64 ASCII strings
+        const base64EncryptedDigest = arrayBufferToBase64(encryptedDigest);
+
+        // Encrypt post content with sharedKey
         const base64Content = utf8ToBase64(content);
-        const encodedContent = base64ToArrayBuffer(base64Content);
-        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encodedCotent = base64ToArrayBuffer(base64Content);
         const encryptedContent = await crypto.subtle.encrypt(
         {
             name: 'AES-GCM',
             length: 256,
-            iv: iv
-         },
-            privateKey, encodedContent
+            iv: iv 
+        },
+        sharedKey,  encodedCotent 
         );
     
         // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
         const base64EncryptedContent = arrayBufferToBase64(encryptedContent);
         const base64IV = arrayBufferToBase64(iv);
        
-      
-       // Fetch data from the PDS API and get the total number of existing posts
-       const response = await axios.get('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/posts');
-       const numExistingPosts = response.data.length;
+        //Fetch the total number of existing posts
+        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
+        const numExistingPosts = response.data.length;
+        // Create a new post ID based on the number of existing posts
+        const newPostId = `post ${numExistingPosts + 1}`;
+        setPostId(newPostId);
 
-       // Create a new post ID based on the number of existing posts
-       // Also create the URL for the new post using the generated post id
-       const newPostId = `post ${numExistingPosts + 1}`;
-       setPostId(newPostId);
-       const postURL = `https://agx9exeaue.execute-api.us-west-1.amazonaws.com/posts/${newPostId}`;   
-
-        // Send the post id,email,post content and post digital signature to PDS
-        await axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/posts', 
+        // Send the post data to PDS
+        await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
             {
                 "postId": newPostId,   
                 "email": email,
-                "post": content,
-                "postDS": base64EncryptedContent,
+                "post": base64EncryptedContent,
+                "postDS": base64EncryptedDigest,
                 "IV": base64IV
             }
         );
        
-       //Send the post data to SNE
-       await axios.put('https://agx9exeaue.execute-api.us-west-1.amazonaws.com/posts', {
+        //Send the post data to SNE
+        await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', {
           "postId": newPostId,
           "email": email,
-          "postDS": base64EncryptedContent,
-          "serviceURL": postURL,
+          "postDS": base64EncryptedDigest,
           "IV": base64IV
         })
       
@@ -138,16 +156,13 @@ export function Post() {
                     />
                 </Form.Group>
                 <Button variant="primary" type="submit"> Post </Button>
-                <p>PostDS: {postSignature}</p>
-                {postId !== '' && (
-                     <p>New post URL: <a href={`${baseUrl}${postId}${postSignature}`}>{`${baseUrl}${postId}${postSignature}`}</a></p>
-                )}
-                <Form.Label>All post URLs:</Form.Label> 
-                {postUrls.length > 0 && (
-                    <><p>All post URLs:</p>
-                         <ul>{postUrls.map(url => (<li key={url}>{url}</li>))}</ul>
-                    </>
-                )}
+                <Form.Group controlId="postId">
+                <h1 className='text-left'>All posts</h1>
+                <Form.Label>Post ID:</Form.Label>
+                    {postIds.map(postId => (
+                         <Button key={postId} href={`/posts/${postId}`} className="me-2">{postId}</Button>
+                    ))}
+                </Form.Group>
             </Container>
         </Form>   
     );
