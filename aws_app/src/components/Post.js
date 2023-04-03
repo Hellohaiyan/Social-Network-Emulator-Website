@@ -155,12 +155,13 @@ export function Post() {
                     />
                 </Form.Group>
                 <Button variant="primary" type="submit"> Post </Button>
+                <br />
+                <br />
                 <Form.Group controlId="postId">
-                <h1 className='text-left'>All posts</h1>
-                <Form.Label>Post ID:</Form.Label>
-                    {postIds.map(postId => (
-                         <Button key={postId} href={`/posts/${postId}`} className="me-2">{postId}</Button>
-                    ))}
+                    <h1 className='text-left'>All posts</h1>
+                     {postIds.map((postId, index) => (
+                     <Button key={postId} href={`/posts/${postId}`} className="me-2" variant="warning">Post Id {index + 1}</Button>
+                     ))}
                 </Form.Group>
             </Container>
         </Form>   
