@@ -41,7 +41,7 @@ async function importPdsPublicKey() {
     const arrayBufferPublicKey = base64ToArrayBuffer(publicKey);
 
     // Convert ArrayBuffer to CryptoKey
-    const pdsPublicKey = await crypto.subtle.importKey('spki', arrayBufferPublicKey, {name: "ECDH", namedCurve: "P-384"}, false, []);
+    const pdsPublicKey = await crypto.subtle.importKey('spki', arrayBufferPublicKey, {name: "ECDH", namedCurve: "P-384"}, true, []);
     return pdsPublicKey;
 }
 
@@ -62,12 +62,12 @@ async function createKeys()
     // Generate client's RSA public/private key pair
     const clientRsaKeyPair = await crypto.subtle.generateKey(
         {
-            name: "RSA-OAEP",
+            name: "RSA-PSS",
             modulusLength: 4096,
             publicExponent: new Uint8Array([1, 0, 1]),
             hash: "SHA-256"
         },
-        true, ['encrypt', 'decrypt']
+        true, ['sign', 'verify']
     );
     const rsaPublicKey = clientRsaKeyPair.publicKey;
     const rsaPrivateKey = clientRsaKeyPair.privateKey;
@@ -87,7 +87,7 @@ async function createKeys()
             name: "AES-GCM",
             length: 256
         },
-        false, ['encrypt', 'decrypt']
+        true, ['encrypt', 'decrypt']
     );
 
     return {publicKey, privateKey, rsaPublicKey, rsaPrivateKey, sharedKey};
@@ -157,12 +157,20 @@ export function Signup()
             }
         );
 
+        // Convert the private and shared keys to base64 ASCII string
+        const arrayBufferPrivateKey = await crypto.subtle.exportKey("pkcs8", privateKey);
+        const base64PrivateKey = arrayBufferToBase64(arrayBufferPrivateKey);
+        const arrayBufferRsaPrivateKey = await crypto.subtle.exportKey("pkcs8", rsaPrivateKey);
+        const base64RsaPrivateKey = arrayBufferToBase64(arrayBufferRsaPrivateKey);
+        const arrayBufferSharedKey = await crypto.subtle.exportKey("raw", sharedKey);
+        const base64SharedKey = arrayBufferToBase64(arrayBufferSharedKey);
+
         // Store client's public/private key pairs and shared key in local storage
-        localStorage.setItem('publicKey', publicKey);
-        localStorage.setItem('privateKey', privateKey);
-        localStorage.setItem('rsaPublicKey', rsaPublicKey);
-        localStorage.setItem('rsaPrivateKey', rsaPrivateKey);
-        localStorage.setItem('sharedKey', sharedKey);
+        localStorage.setItem('publicKey', base64PublicKey);
+        localStorage.setItem('privateKey', base64PrivateKey);
+        localStorage.setItem('rsaPublicKey', base64RsaPublicKey);
+        localStorage.setItem('rsaPrivateKey', base64RsaPrivateKey);
+        localStorage.setItem('sharedKey', base64SharedKey);
     };
 
     // Function that calls a signUp function to perform the encryption and send the data to the servers.
