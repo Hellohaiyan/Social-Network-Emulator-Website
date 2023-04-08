@@ -33,7 +33,7 @@ export function Post() {
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
-    const [postSignature, setPostSignature] = useState('');
+    
 
     // Fetch all existing postids from SNE and set them to the state variable
     useEffect(() => {
@@ -60,6 +60,8 @@ export function Post() {
         // Fetch the sharedKey and rsaPrivateKey from local storage and conver them to CryptoKey objects
         const base64SharedKey = localStorage.getItem('sharedKey');
         let base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
+        console.log(base64SharedKey);
+        console.log(base64RsaPrivateKey);
 
         const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey)
         const arrayBufferRsaPrivateKey = base64ToArrayBuffer(base64RsaPrivateKey)
@@ -79,74 +81,68 @@ export function Post() {
         console.log(rsaPrivateKey);
         console.log(typeof sharedKey);
         console.log(typeof rsaPrivateKey);
+
+
+        // Create digital signature with rsaPrivateKey
+        const base64Content = utf8ToBase64(content);
+        const encodedCotent = base64ToArrayBuffer(base64Content);
+        const signature = await crypto.subtle.sign(
+            {
+              name: "RSA-PSS",
+              saltLength: 32,
+            },
+            rsaPrivateKey,
+            encodedCotent
+          );
+          
+        console.log('Digital signature:', signature);
+ 
+        // Convert signatue from ArrayBuffers to base64 ASCII strings and set it to the state variable
+        const base64Signatue = arrayBufferToBase64(signature);
         
-        // //function to digest the post content
-        // async function digestMessage(post) {
-        //     const encoder = new TextEncoder();
-        //     const data = encoder.encode(post);
-        //     const hash = await crypto.subtle.digest("SHA-256", data);
-        //     return hash;
-        // }
 
-        // //digest the post content
-        // const digestPost = digestMessage(content);
-
-        // // Encrypt digest(post) with rsaPrivateKey
-        // const iv = window.crypto.getRandomValues(new Uint8Array(12));
-        // const encryptedDigest = await crypto.subtle.encrypt(
-        //   {
-        //      name: "RSA-OAEP",
-        //      length: 4096,
-        //      iv: iv 
-        //   },
-        //   rsaPrivateKey,  digestPost
-        // );
-
-        // // Convert encrypted digest(post) from ArrayBuffers to base64 ASCII strings
-        // const base64EncryptedDigest = arrayBufferToBase64(encryptedDigest);
-        // setPostSignature(base64EncryptedDigest);
-
-        // // Encrypt post content with sharedKey
-        // const base64Content = utf8ToBase64(content);
-        // const encodedCotent = base64ToArrayBuffer(base64Content);
-        // const encryptedContent = await crypto.subtle.encrypt(
-        // {
-        //     name: 'AES-GCM',
-        //     length: 256,
-        //     iv: iv 
-        // },
-        // sharedKey,  encodedCotent 
-        // );
+        // Encrypt post content with sharedKey
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedContent = await crypto.subtle.encrypt(
+        {
+            name: 'AES-GCM',
+            length: 256,
+            iv: iv 
+        },
+            sharedKey,  encodedCotent 
+        );
     
-        // // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
-        // const base64EncryptedContent = arrayBufferToBase64(encryptedContent);
-        // const base64IV = arrayBufferToBase64(iv);
+        // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
+        const base64EncryptedContent = arrayBufferToBase64(encryptedContent);
+        const base64IV = arrayBufferToBase64(iv);
        
-        // //Fetch the total number of existing posts
-        // const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
-        // const numExistingPosts = response.data.length;
-        // // Create a new post ID based on the number of existing posts
-        // const newPostId = `post ${numExistingPosts + 1}`;
-        // setPostId(newPostId);
+        //Fetch the total number of existing posts
+        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
+        const numExistingPosts = response.data.length;
+        //Create a new post ID based on the number of existing posts
+        const newPostId = `post ${numExistingPosts + 1}`;
+        setPostId(newPostId);
 
-        // // Send the post data to PDS
-        // await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
-        //     {
-        //         "postId": postId,   
-        //         "email": email,
-        //         "post": base64EncryptedContent,
-        //         "postDS": postSignature,
-        //         "IV": base64IV
-        //     }
-        // );
+        //Send the post data to PDS
+        
+        await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
+        {
+            "postId": postId,   
+            "email": email,
+            "post": base64EncryptedContent,
+            "postDS": base64Signatue,
+            "IV": base64IV
+        }
+        );
        
-        // //Send the post data to SNE
-        // await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', {
-        //   "postId": postId,
-        //   "email": email,
-        //   "postDS": postSignature,
-        //   "IV": base64IV
-        // })
+        //Send the post data to SNE
+        await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', 
+        { 
+             "postId": postId,
+             "email": email,
+             "postDS": base64Signatue,
+             "IV": base64IV
+        })
       
     }
  
