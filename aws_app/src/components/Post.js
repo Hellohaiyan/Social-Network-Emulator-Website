@@ -33,27 +33,14 @@ export function Post() {
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
-    
-
-    // Fetch all existing postids from SNE and set them to the state variable
+    // Fetch the user's email address from local storage and set it to the state variable
     useEffect(() => {
-        const fetchPostIds = async () => {
-        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
-        const postData = response.data;
-        const postIds = postData.map(post => post.postId);
-        setPostIds(postIds.sort());
-        };
-        fetchPostIds();
-      
-      
-      // Fetch the user's email address from local storage and set it to the state variable
-      const userEmail = localStorage.getItem('email');
-      if (userEmail) 
-      {
-        setEmail(userEmail);
-      }
+        const userEmail = localStorage.getItem('email');
+        if (userEmail) 
+        {
+            setEmail(userEmail);
+        }
     }, []);
-
 
     const handlePost = async () => {
         
@@ -146,9 +133,20 @@ export function Post() {
       
     }
  
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();   
-        handlePost();
+        await handlePost();
+
+        // Fetch all existing postids from SNE after handlePost function completed 
+        try {
+            const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
+            const postData = response.data;
+            const fetchedPostIds = postData.map(post => post.postId);
+            setPostIds(fetchedPostIds.sort());
+          } catch (error) {
+            console.error('Failed to fetch post IDs:', error);
+          }
+
     }
 
     return (
