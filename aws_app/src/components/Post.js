@@ -56,7 +56,7 @@ export function Post() {
         
         // Fetch the sharedKey and rsaPrivateKey from local storage and conver them to CryptoKey objects
         const base64SharedKey = localStorage.getItem('sharedKey');
-        let base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
+        const base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
         console.log(base64SharedKey);
         console.log(base64RsaPrivateKey);
 
@@ -136,11 +136,68 @@ export function Post() {
         await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', 
         { 
              "postId": postId,
-             "email": email,
-             "postDS": base64Signatue,
-             "IV": base64IV
+             "email": email
         })
       
+    }
+
+    const handleView = async () => {
+         
+        //Sotre postId when click a button to view post
+
+        //Send post id and viewer email to PDS
+
+        // Fetch the viewer sharedKey and rsaPrivateKey from local storage and conver them to CryptoKey objects
+        const base64SharedKey = localStorage.getItem('sharedKey');
+        const base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
+        const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey);
+        const arrayBufferRsaPrivateKey = base64ToArrayBuffer(base64RsaPrivateKey)
+
+        const sharedKey = await crypto.subtle.importKey('raw', arrayBufferSharedKey, {name: "AES-GCM", length: 256}, false, ['encrypt', 'decrypt']);
+        const rsaPrivateKey = await crypto.subtle.importKey('pkcs8', arrayBufferRsaPrivateKey, 
+            {
+                name: "RSA-PSS",
+                modulesLength: 4096,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: "SHA-256"
+            },
+            false, ['sign']
+        );
+        //Viewer decrypt post using viewer's shared key
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedPost = "pds"; //get from PDS
+        const decryptedPost = await crypto.subtle.decrypt(
+            {
+                name: 'AES-GCM',
+                length: 256,
+                iv: iv 
+            },
+                sharedKey, encryptedPost
+            );
+        //Viewer creates the digest(P) on the decrypted post 
+        const caculatedDigestP = await crypto.subtle.sign(
+        {
+            name: "RSA-PSS",
+            saltLength: 32,
+        },
+        rsaPrivateKey,
+        decryptedPost
+        );
+
+        const encryptedDigestP = "pds"; //get from PDS
+        const posterRsaPublicKey = "pds"; //get from PDS
+        //Viewer decrypts the digest(P) received from PDS with poster’s  RSA public key
+        const DigestP = await crypto.subtle.verify(
+            {
+                name: "RSA-PSS",
+                saltLength: 32,
+            },
+            posterRsaPublicKey,
+            encryptedDigestP
+            );
+    
+        //Compare DigestP with caculatedDigestP and ensure they are equal. If they are, display post to viewer
+
     }
  
     const handleSubmit = async (event) => {
@@ -180,7 +237,7 @@ export function Post() {
                 <Form.Group controlId="postId">
                     <h1 className='text-left'>All posts</h1>
                      {postIds.map((postId, index) => (
-                     <Button key={postId} href={`/posts/${postId}`} className="me-2" variant="warning">Post Id {index + 1}</Button>
+                     <Button key={postId} onClick={() => this.handleViewPost(postId)} className="me-2" variant="warning">Post Id {index + 1}</Button>
                      ))}
                 </Form.Group>
             </Container>
