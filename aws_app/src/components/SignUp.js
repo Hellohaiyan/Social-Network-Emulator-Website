@@ -171,10 +171,13 @@ export function Signup()
         localStorage.setItem('rsaPublicKey', base64RsaPublicKey);
         localStorage.setItem('rsaPrivateKey', base64RsaPrivateKey);
         localStorage.setItem('sharedKey', base64SharedKey);
+
+        alert('Successfully signed up');
+        window.location.assign("/signin");
     };
 
     // Function that calls a signUp function to perform the encryption and send the data to the servers.
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
         
         // Check if password and confirm password match
@@ -184,7 +187,7 @@ export function Signup()
              return;
         }
 
-        signUp();
+        await signUp();
     };
 
     return (
