@@ -28,21 +28,23 @@ function utf8ToBase64(str) {
     return window.btoa(encodeURIComponent(str));
 }
 
+
 export function Post() {
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
 
+    const fetchPostIds = async () => {
+        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
+        const postData = response.data;
+        const postIds = postData.map(post => post.postId);
+        setPostIds(postIds.sort());
+    };
     
     useEffect(() => {
-        //Fetch all existing postids from SNE
-        const fetchPostIds = async () => {
-            const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
-            const postData = response.data;
-            const postIds = postData.map(post => post.postId);
-            setPostIds(postIds.sort());
-            };
-            fetchPostIds();
+        // Fetch all existing postids from SNE
+        fetchPostIds();
+
         // Fetch the user's email address from local storage and set it to the state variable
         const userEmail = localStorage.getItem('email');
         if (userEmail) 
@@ -86,8 +88,7 @@ export function Post() {
         const base64Signature = arrayBufferToBase64(signature);
 
         // Encrypt post content with sharedKey
-        const user = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
-        const base64IV = user.data.IV;
+        const base64IV = localStorage.getItem("IV");
         const arrayBufferIV = base64ToArrayBuffer(base64IV);
         const encryptedArrayBufferContent = await crypto.subtle.encrypt(
         {
@@ -118,63 +119,63 @@ export function Post() {
         );
     }
 
-    const handleView = async () => {
-         
-        //Sotre postId when click a button to view post
+    const handleViewPost = async () => {
+        // Fetch the Post and PostDS from the PDS
+        const putData = {
+            "postId": "1",
+            "viewer": email
+        };
+        let postData = await axios.put("https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/view", putData);
+        postData = postData.data;
+        const base64EncryptedPost = postData.base64EncryptedPost;
+        const base64PostDS = postData.postDS;
+        const base64PosterRsaPublicKey = postData.posterRsaPublicKey;
+        
 
-        //Send post id and viewer email to PDS
-
-        // Fetch the viewer sharedKey and rsaPrivateKey from local storage and conver them to CryptoKey objects
-        const base64SharedKey = localStorage.getItem('sharedKey');
-        const base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
-        const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey);
-        const arrayBufferRsaPrivateKey = base64ToArrayBuffer(base64RsaPrivateKey)
-
-        const sharedKey = await crypto.subtle.importKey('raw', arrayBufferSharedKey, {name: "AES-GCM", length: 256}, false, ['encrypt', 'decrypt']);
-        const rsaPrivateKey = await crypto.subtle.importKey('pkcs8', arrayBufferRsaPrivateKey, 
+        const arrayBufferEncryptedPost = base64ToArrayBuffer(base64EncryptedPost);
+        const arrayBufferPostDS = base64ToArrayBuffer(base64PostDS);
+        const arrayBufferPosterRsaPublicKey = base64ToArrayBuffer(base64PosterRsaPublicKey);
+        const posterRsaPublicKey = await crypto.subtle.importKey('spki', arrayBufferPosterRsaPublicKey,
             {
                 name: "RSA-PSS",
                 modulesLength: 4096,
                 publicExponent: new Uint8Array([1, 0, 1]),
                 hash: "SHA-256"
-            },
-            false, ['sign']
-        );
-        //Viewer decrypt post using viewer's shared key
-        const iv = window.crypto.getRandomValues(new Uint8Array(12));
-        const encryptedPost = "pds"; //get from PDS
-        const decryptedPost = await crypto.subtle.decrypt(
-            {
-                name: 'AES-GCM',
-                length: 256,
-                iv: iv 
-            },
-                sharedKey, encryptedPost
-            );
-        //Viewer creates the digest(P) on the decrypted post 
-        const caculatedDigestP = await crypto.subtle.sign(
-        {
-            name: "RSA-PSS",
-            saltLength: 32,
-        },
-        rsaPrivateKey,
-        decryptedPost
+            }, false, ['verify']
         );
 
-        const encryptedDigestP = "pds"; //get from PDS
-        const posterRsaPublicKey = "pds"; //get from PDS
-        //Viewer decrypts the digest(P) received from PDS with poster’s  RSA public key
-        const DigestP = await crypto.subtle.verify(
+        // Fetch the viewer sharedKey and IV from local storage
+        const base64SharedKey = localStorage.getItem('sharedKey');
+        const base64IV = localStorage.getItem("IV");
+        const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey);
+        const arrayBufferIV = base64ToArrayBuffer(base64IV);
+        const sharedKey = await crypto.subtle.importKey('raw', arrayBufferSharedKey, {name: "AES-GCM", length: 256}, false, ['encrypt', 'decrypt']);
+
+        // Decrpyt Post
+        const arrayBufferPost = await crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                length: 256,
+                iv: arrayBufferIV
+            }, sharedKey, arrayBufferEncryptedPost
+        );
+
+        // Viewer verifies the post using the PostDS
+        const valid = await crypto.subtle.verify(
             {
                 name: "RSA-PSS",
                 saltLength: 32,
             },
-            posterRsaPublicKey,
-            encryptedDigestP
-            );
-    
-        //Compare DigestP with caculatedDigestP and ensure they are equal. If they are, display post to viewer
+            posterRsaPublicKey, arrayBufferPostDS, arrayBufferPost
+        );
 
+        if (valid) {
+            console.log("Success");
+            // show post to viewer
+        }
+        else {
+            alert("Post failed Digital Signature verification.");
+        }
     }
  
     const handleSubmit = async (event) => {
@@ -202,20 +203,20 @@ export function Post() {
                 <Form.Group controlId="content">
                     <Form.Label>Post Content</Form.Label>
                     <Form.Control
-                      as="textarea"
-                      rows={3}
-                      value={content}
-                      onChange={(event) => setContent(event.target.value)}
+                        as="textarea"
+                        rows={3}
+                        value={content}
+                        onChange={(event) => setContent(event.target.value)}
                     />
                 </Form.Group>
-                <Button variant="primary" type="submit"> Post </Button>
-                <br />
-                <br />
+                <Button variant="primary" type="submit">Post</Button>
                 <Form.Group controlId="postId">
                     <h1 className='text-left'>All posts</h1>
-                     {postIds.map((postId, index) => (
-                     <Button key={postId} onClick={() => this.handleViewPost(postId)} className="me-2" variant="warning">Post Id {index + 1}</Button>
-                     ))}
+                    {postIds.map((postId, index) => (
+                        <Button key={postId} onClick={handleViewPost} className="me-2" variant="warning">
+                            Post Id {index + 1}
+                        </Button>
+                    ))}
                 </Form.Group>
             </Container>
         </Form>   

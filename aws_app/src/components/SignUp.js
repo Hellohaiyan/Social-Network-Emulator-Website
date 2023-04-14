@@ -171,6 +171,7 @@ export function Signup()
         localStorage.setItem('rsaPublicKey', base64RsaPublicKey);
         localStorage.setItem('rsaPrivateKey', base64RsaPrivateKey);
         localStorage.setItem('sharedKey', base64SharedKey);
+        localStorage.setItem("IV", base64IV);
 
         alert('Successfully signed up');
         window.location.assign("/signin");
