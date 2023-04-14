@@ -29,7 +29,6 @@ function utf8ToBase64(str) {
 }
 
 export function Post() {
-    const [postId, setPostId] = useState('');
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
@@ -53,12 +52,9 @@ export function Post() {
     }, []);
 
     const handlePost = async () => {
-        
         // Fetch the sharedKey and rsaPrivateKey from local storage and conver them to CryptoKey objects
         const base64SharedKey = localStorage.getItem('sharedKey');
         const base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
-        console.log(base64SharedKey);
-        console.log(base64RsaPrivateKey);
 
         const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey)
         const arrayBufferRsaPrivateKey = base64ToArrayBuffer(base64RsaPrivateKey)
@@ -73,72 +69,53 @@ export function Post() {
             },
             false, ['sign']
         );
-        
-        console.log(sharedKey);
-        console.log(rsaPrivateKey);
-        console.log(typeof sharedKey);
-        console.log(typeof rsaPrivateKey);
-
 
         // Create digital signature with rsaPrivateKey
         const base64Content = utf8ToBase64(content);
-        const encodedCotent = base64ToArrayBuffer(base64Content);
+        const arrayBufferCotent = base64ToArrayBuffer(base64Content);
         const signature = await crypto.subtle.sign(
             {
               name: "RSA-PSS",
-              saltLength: 32,
+              saltLength: 32
             },
             rsaPrivateKey,
-            encodedCotent
+            arrayBufferCotent
           );
-          
-        console.log('Digital signature:', signature);
  
         // Convert signatue from ArrayBuffers to base64 ASCII strings and set it to the state variable
-        const base64Signatue = arrayBufferToBase64(signature);
-        
+        const base64Signature = arrayBufferToBase64(signature);
 
         // Encrypt post content with sharedKey
-        const iv = window.crypto.getRandomValues(new Uint8Array(12));
-        const encryptedContent = await crypto.subtle.encrypt(
+        const user = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
+        const base64IV = user.data.IV;
+        const arrayBufferIV = base64ToArrayBuffer(base64IV);
+        const encryptedArrayBufferContent = await crypto.subtle.encrypt(
         {
             name: 'AES-GCM',
             length: 256,
-            iv: iv 
+            iv: arrayBufferIV 
         },
-            sharedKey,  encodedCotent 
+            sharedKey,  arrayBufferCotent 
         );
     
         // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
-        const base64EncryptedContent = arrayBufferToBase64(encryptedContent);
-        const base64IV = arrayBufferToBase64(iv);
-       
-        //Fetch the total number of existing posts
-        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
-        const numExistingPosts = response.data.length;
-        //Create a new post ID based on the number of existing posts
-        const newPostId = `post ${numExistingPosts + 1}`;
-        setPostId(newPostId);
+        const base64EncryptedContent = arrayBufferToBase64(encryptedArrayBufferContent);
 
-        //Send the post data to PDS
-        
+        // Send the post data to PDS
         await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
-        {
-            "postId": postId,   
-            "email": email,
-            "post": base64EncryptedContent,
-            "postDS": base64Signatue,
-            "IV": base64IV
-        }
+            {
+                "email": email,
+                "post": base64EncryptedContent,
+                "postDS": base64Signature
+            }
         );
        
-        //Send the post data to SNE
+        // Send the post data to SNE
         await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', 
-        { 
-             "postId": postId,
-             "email": email
-        })
-      
+            { 
+                "email": email
+            }
+        );
     }
 
     const handleView = async () => {
