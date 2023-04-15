@@ -34,7 +34,7 @@ function base64ToUtf8(base64Str) {
     var decodedStr = window.atob(base64Str);
 
     // Convert the decoded binary data to a UTF-8 string
-    var utf8Str = decodeURIComponent(escape(decodedStr));
+    var utf8Str = decodeURIComponent(decodedStr);
 
     return utf8Str;
 }
