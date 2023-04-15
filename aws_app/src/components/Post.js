@@ -28,11 +28,23 @@ function utf8ToBase64(str) {
     return window.btoa(encodeURIComponent(str));
 }
 
+// Helper function to convert Base64 ASCII strings to UTF-8 strings
+function base64ToUtf8(base64Str) {
+    // Decode the Base64 string
+    var decodedStr = window.atob(base64Str);
+
+    // Convert the decoded binary data to a UTF-8 string
+    var utf8Str = decodeURIComponent(escape(decodedStr));
+
+    return utf8Str;
+}
+
 
 export function Post() {
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
+    const [viewPostContent, setViewContent] = useState('');
 
     const fetchPostIds = async () => {
         const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
@@ -119,10 +131,10 @@ export function Post() {
         );
     }
 
-    const handleViewPost = async () => {
+    const handleViewPost = async (postId) => {
         // Fetch the Post and PostDS from the PDS
         const putData = {
-            "postId": "1",
+            "postId": postId,
             "viewer": email
         };
         let postData = await axios.put("https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/view", putData);
@@ -172,6 +184,10 @@ export function Post() {
         if (valid) {
             console.log("Success");
             // show post to viewer
+            const decodedPost = arrayBufferToBase64(arrayBufferPost);
+            const viewContent = base64ToUtf8(decodedPost);
+            setViewContent(viewContent);
+            console.log(viewContent);
         }
         else {
             alert("Post failed Digital Signature verification.");
@@ -213,11 +229,15 @@ export function Post() {
                 <Form.Group controlId="postId">
                     <h1 className='text-left'>All posts</h1>
                     {postIds.map((postId, index) => (
-                        <Button key={postId} onClick={handleViewPost} className="me-2" variant="warning">
+                        <Button key={postId} onClick={() => handleViewPost(postId)} className="me-2" variant="warning">
                             Post Id {index + 1}
                         </Button>
                     ))}
                 </Form.Group>
+                <div>
+                    <h2>Post Content: </h2>
+                    <h2>{viewPostContent}</h2>
+                </div>
             </Container>
         </Form>   
     );
