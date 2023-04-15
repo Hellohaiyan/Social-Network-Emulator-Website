@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button, Modal} from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 
 
@@ -45,6 +45,8 @@ export function Post() {
     const [content, setContent] = useState('');
     const [postIds, setPostIds] = useState([]);
     const [viewPostContent, setViewContent] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [activeButtonIndex, setActiveButtonIndex] = useState(null); // State to store the index of the active button
 
     const fetchPostIds = async () => {
         const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
@@ -131,7 +133,7 @@ export function Post() {
         );
     }
 
-    const handleViewPost = async (postId) => {
+    const handleViewPost = async (postId, index) => {
         // Fetch the Post and PostDS from the PDS
         const putData = {
             "postId": postId,
@@ -188,12 +190,18 @@ export function Post() {
             const viewContent = base64ToUtf8(decodedPost);
             setViewContent(viewContent);
             console.log(viewContent);
+            setShowModal(true); // Show the modal
         }
         else {
             alert("Post failed Digital Signature verification.");
         }
+        setActiveButtonIndex(index); // Update the activeButtonIndex state with the index of the clicked button
     }
- 
+    
+    const handleCloseModal = () => {
+        setShowModal(false); // Close the modal
+    }
+
     const handleSubmit = async (event) => {
         event.preventDefault();   
         await handlePost();
@@ -229,15 +237,24 @@ export function Post() {
                 <Form.Group controlId="postId">
                     <h1 className='text-left'>All posts</h1>
                     {postIds.map((postId, index) => (
-                        <Button key={postId} onClick={() => handleViewPost(postId)} className="me-2" variant="warning">
+                        <Button key={postId} onClick={() => handleViewPost(postId, index)} className="me-2" variant={activeButtonIndex === index ? 'secondary' : 'warning'}>
                             Post Id {index + 1}
                         </Button>
                     ))}
                 </Form.Group>
-                <div>
-                    <h2>Post Content: </h2>
-                    <h2>{viewPostContent}</h2>
-                </div>
+               <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>View Post Content</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>{viewPostContent}</p> {/* Display the view post content */}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             </Container>
         </Form>   
     );
