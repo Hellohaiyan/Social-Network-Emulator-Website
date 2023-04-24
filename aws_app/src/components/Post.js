@@ -221,11 +221,11 @@ export function Post() {
     return (
         <Form className="Form" onSubmit={handleSubmit}>
             <Container>
-                <h1 className='text-center'>Write your post</h1>
+                <h1 className='text-center'>Write Your Post</h1>
                 <Form.Group className="mb-3"></Form.Group>        
-                <Form.Label>User: {email}</Form.Label>
+                <b><Form.Label>User: {email}</Form.Label></b>
                 <Form.Group controlId="content">
-                    <Form.Label>Post Content</Form.Label>
+                    <Form.Label>Post Content:</Form.Label>
                     <Form.Control
                         as="textarea"
                         rows={3}
@@ -233,14 +233,21 @@ export function Post() {
                         onChange={(event) => setContent(event.target.value)}
                     />
                 </Form.Group>
-                <Button variant="primary" type="submit">Post</Button>
-                <Form.Group controlId="postId">
-                    <h1 className='text-left'>All posts</h1>
-                    {postIds.map((postId, index) => (
-                        <Button key={postId} onClick={() => handleViewPost(postId, index)} className="me-2" variant={activeButtonIndex === index ? 'secondary' : 'warning'}>
-                            Post Id {index + 1}
-                        </Button>
-                    ))}
+                <div className='text-center mt-3'>
+                    <Button variant="primary" type="submit">Post</Button>
+                </div>
+                <Form.Group style={{paddingTop:"50px"}} controlId="postId">
+                    <h1 className='text-center'>View Posts</h1>
+                    <div className='text-center'>
+                        {postIds.map((postId, index) => (
+                            <div key={postId} style={{paddingTop:"30px"}}>
+                                <b style={{paddingRight:"30px"}}>test@gmail.com: </b>
+                                <Button onClick={() => handleViewPost(postId, index)} className="me-2" variant={activeButtonIndex === index ? 'secondary' : 'warning'}>
+                                    Post {index + 1}
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
                 </Form.Group>
                <Modal show={showModal} onHide={handleCloseModal}>
                 <Modal.Header closeButton>
