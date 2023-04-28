@@ -251,7 +251,7 @@ export function Post() {
                     <div className='text-center'>
                         {postIdsWithEmails.map(({ postId, email }, index)  => (
                             <div key={postId} style={{paddingTop:"30px"}}>
-                                <b style={{paddingRight:"30px"}}>{email}: </b>
+                                 <b style={{ display: 'inline-block', width: '150px', paddingRight:"200px" }}>{email}: </b>
                                 <Button onClick={() => handleViewPost(postId, index)} className="me-2" variant={activeButtonIndex === index ? 'secondary' : 'warning'}>
                                     Post {index + 1}
                                 </Button>
