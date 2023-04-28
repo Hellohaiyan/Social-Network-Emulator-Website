@@ -43,7 +43,7 @@ function base64ToUtf8(base64Str) {
 export function Post() {
     const [email, setEmail] = useState('');
     const [content, setContent] = useState('');
-    const [postIds, setPostIds] = useState([]);
+    const [postIdsWithEmails, setPostIdsWithEmails] = useState([]);
     const [viewPostContent, setViewContent] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [activeButtonIndex, setActiveButtonIndex] = useState(null); // State to store the index of the active button
@@ -51,8 +51,13 @@ export function Post() {
     const fetchPostIds = async () => {
         const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
         const postData = response.data;
-        const postIds = postData.map(post => post.postId);
-        setPostIds(postIds.sort());
+        const postIds = postData.map(post => post.postId).sort();
+            const emailsByPostId = {};
+            postData.forEach(post => {
+              emailsByPostId[post.postId] = post.email;
+            });
+            const postIdsWithEmails = postIds.map(postId => ({ postId, email: emailsByPostId[postId] }));
+            setPostIdsWithEmails(postIdsWithEmails);
     };
     
     useEffect(() => {
@@ -210,8 +215,13 @@ export function Post() {
         try {
             const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
             const postData = response.data;
-            const fetchedPostIds = postData.map(post => post.postId);
-            setPostIds(fetchedPostIds.sort());
+            const postIds = postData.map(post => post.postId).sort();
+            const emailsByPostId = {};
+            postData.forEach(post => {
+              emailsByPostId[post.postId] = post.email;
+            });
+            const postIdsWithEmails = postIds.map(postId => ({ postId, email: emailsByPostId[postId] }));
+            setPostIdsWithEmails(postIdsWithEmails);
           } catch (error) {
             console.error('Failed to fetch post IDs:', error);
           }
@@ -239,9 +249,9 @@ export function Post() {
                 <Form.Group style={{paddingTop:"50px"}} controlId="postId">
                     <h1 className='text-center'>View Posts</h1>
                     <div className='text-center'>
-                        {postIds.map((postId, index) => (
+                        {postIdsWithEmails.map(({ postId, email }, index)  => (
                             <div key={postId} style={{paddingTop:"30px"}}>
-                                <b style={{paddingRight:"30px"}}>test@gmail.com: </b>
+                                <b style={{paddingRight:"30px"}}>{email}: </b>
                                 <Button onClick={() => handleViewPost(postId, index)} className="me-2" variant={activeButtonIndex === index ? 'secondary' : 'warning'}>
                                     Post {index + 1}
                                 </Button>
