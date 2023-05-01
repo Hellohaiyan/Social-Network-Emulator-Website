@@ -210,20 +210,23 @@ export function Post() {
         await handlePost();
 
         // Fetch all existing postids from SNE again after handlePost function completed 
-        try {
-            const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
-            const postData = response.data;
-            const postIds = postData.map(post => post.postId).sort();
-            const emailsByPostId = {};
-            postData.forEach(post => {
-              emailsByPostId[post.postId] = post.email;
-            });
-            const postIdsWithEmails = postIds.map(postId => ({ postId, email: emailsByPostId[postId] }));
-            setPostIdsWithEmails(postIdsWithEmails);
-          } catch (error) {
-            console.error('Failed to fetch post IDs:', error);
-          }
+        fetchPostIds();
+    }
 
+    const handleDeletePost = async (postId) => {
+        // Delete post from PDS
+        await axios.delete(`https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/${postId}`);
+
+        // Delete post from SNE
+        const response = await axios.delete(`https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts/${postId}`);
+
+        if (response.data) {
+            alert('Successfully deleted post');
+            fetchPostIds();
+        }
+        else {
+            alert('Failed to delete post');
+        }
     }
 
     return (
@@ -249,10 +252,15 @@ export function Post() {
                     <div className='text-center'>
                         {postIdsWithEmails.map(({ postId, email }, index)  => (
                             <div key={postId} style={{paddingTop:"30px"}}>
-                                 <b style={{ display: 'inline-block', width: '150px', paddingRight:"200px" }}>{email}: </b>
+                                <b style={{ display: 'inline-block', width: '150px', paddingRight:"200px" }}>{email}: </b>
                                 <Button onClick={() => handleViewPost(postId, index)} className="me-2" variant={activeButtonIndex === index ? 'secondary' : 'warning'}>
                                     Post {index + 1}
                                 </Button>
+                                {email === localStorage.getItem('email') ?
+                                    <Button onClick={() => handleDeletePost(postId)} className="me-2" variant='danger'>
+                                        Delete
+                                    </Button> : null
+                                }
                             </div>
                         ))}
                     </div>
