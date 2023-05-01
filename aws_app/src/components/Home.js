@@ -1,23 +1,18 @@
 import React from "react";
 import Image from 'react-bootstrap/Image';
 
-import Waterfall from "../images/temp.png"
+import AWS from "../images/AWS.png"
 
 
 export function Home() {
   const imageStyle = {
     maxWidth: '100%',
-    height: 'auto',
-    objectFit: 'contain'
-  };
-  const containerStyle = {
-    height: '700px',
-    overflow: 'hidden'
+    maxHeight: '100%'
   };
 
   return (
-    <div style={containerStyle}>
-      <Image src={Waterfall} style={imageStyle} />
+    <div>
+      <Image src={AWS} style={imageStyle} />
     </div>
   );
 }

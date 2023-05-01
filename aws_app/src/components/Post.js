@@ -189,12 +189,10 @@ export function Post() {
         );
 
         if (valid) {
-            console.log("Success");
             // show post to viewer
             const decodedPost = arrayBufferToBase64(arrayBufferPost);
             const viewContent = base64ToUtf8(decodedPost);
             setViewContent(viewContent);
-            console.log(viewContent);
             setShowModal(true); // Show the modal
         }
         else {
