@@ -5,6 +5,7 @@ import Navbar from 'react-bootstrap/Navbar';
 
 export function Navigation() 
 {
+
     const loggedIn = localStorage.getItem('email');
     var signInOut;
     var signUp;
@@ -21,7 +22,7 @@ export function Navigation()
         signInOut = <Nav.Link href="/signin">Sign In</Nav.Link>;
         signUp = <Nav.Link href="/signup">Sign Up</Nav.Link>
     }
-
+   
     return (
         <Navbar className="Navbar" fixed="top">
             <Container fluid>
