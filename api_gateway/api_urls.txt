@@ -1,0 +1,9 @@
+pdsKeysAPI: https://7v0eygvorb.execute-api.us-west-1.amazonaws.com
+
+pdsPostsAPI: https://1ol178inca.execute-api.us-west-1.amazonaws.com
+
+pdsUsersAPI: https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com
+
+snePostsAPI: https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com
+
+sneUsersAPI: https://agx9exeaue.execute-api.us-west-1.amazonaws.com

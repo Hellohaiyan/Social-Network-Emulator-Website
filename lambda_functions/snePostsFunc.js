@@ -2,7 +2,8 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
     DynamoDBDocumentClient,
     ScanCommand,
-    PutCommand
+    PutCommand,
+    DeleteCommand
 } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
@@ -27,13 +28,15 @@ export const handler = async (event, context) => {
                 body = body.Items;
                 break;
             case "PUT /posts":
-                // Get current Post ID and calculate next one
-                let newPostId = 1;
+                // Get current Post IDs and calculate next one
+                let highestPostId = 1;
                 const posts = await dynamo.send(
                     new ScanCommand({ TableName: tableName })
                 );
-                if (posts) {
-                    newPostId = posts.Items.length + 1;
+                for (let i = 0; i < posts.Items.length; i++) {
+                    if (posts.Items[i].postId > highestPostId) {
+                        highestPostId = posts.Items[i].postId;
+                    }
                 }
                 
                 let requestJSON = JSON.parse(event.body);
@@ -41,12 +44,25 @@ export const handler = async (event, context) => {
                     new PutCommand({
                         TableName: tableName,
                         Item: {
-                            postId: newPostId,
+                            postId: highestPostId + 1,
                             email: requestJSON.email
                         },
                     })
                 );
-                body = `Successfully registered post ${newPostId} to SNE`;
+                body = `Successfully registered post ${highestPostId + 1} to SNE`;
+                break;
+            case "DELETE /posts/{postId}":
+                const postId = event.pathParameters.postId;
+                await dynamo.send(
+                    new DeleteCommand({
+                        TableName: tableName,
+                        Key: {
+                            postId: parseInt(postId, 10)
+                        }
+                    
+                    })
+                );
+                body = `Successfully deleted post ${postId} from SNE`;
                 break;
             default:
                 throw new Error(`Unsupported route: "${event.routeKey}"`);

@@ -37,10 +37,9 @@ export const handler = async (event, context) => {
         );
 
         if (keyData.Items && keyData.Items.length > 0) {
-          // Public key already exists in pdsKeys table
+          // Public keys already exists in pdsKeys table
           body = {
             publicKey: keyData.Items[0].publicKey,
-            rsaPublicKey: keyData.Items[0].rsaPublicKey,
             encryptPublicKey: keyData.Items[0].encryptPublicKey
           };
         } else {
@@ -60,25 +59,6 @@ export const handler = async (event, context) => {
           
           const arrayBufferPrivateKey = await crypto.subtle.exportKey("pkcs8", privateKey);
           const base64PrivateKey = arrayBufferToBase64(arrayBufferPrivateKey);
-          
-          // RSA Signing Keys do not exist in pdsKeys table, create new key pair
-          const rsaKeyPair = await crypto.subtle.generateKey(
-            {
-              name: "RSA-PSS",
-              modulusLength: 4096,
-              publicExponent: new Uint8Array([1, 0, 1]),
-              hash: "SHA-256"
-            },
-            true, ['sign', 'verify']
-          );
-          let rsaPublicKey = rsaKeyPair.publicKey;
-          let rsaPrivateKey = rsaKeyPair.privateKey;
-          
-          const arrayBufferRsaPublicKey = await crypto.subtle.exportKey("spki", rsaPublicKey);
-          const base64RsaPublicKey = arrayBufferToBase64(arrayBufferRsaPublicKey);
-          
-          const arrayBufferRsaPrivateKey = await crypto.subtle.exportKey("pkcs8", rsaPrivateKey);
-          const base64RsaPrivateKey = arrayBufferToBase64(arrayBufferRsaPrivateKey);
           
           // RSA Encrypt/Decrypt Keys do not exist in pdsKeys table, create new key pair
           const encryptDecryptKeyPair = await crypto.subtle.generateKey(
@@ -106,8 +86,6 @@ export const handler = async (event, context) => {
               Item: {
                 publicKey: base64PublicKey,
                 privateKey: base64PrivateKey,
-                rsaPublicKey: base64RsaPublicKey,
-                rsaPrivateKey: base64RsaPrivateKey,
                 encryptPublicKey: base64EncryptPublicKey,
                 decryptPrivateKey: base64DecryptPrivateKey
               },
@@ -115,7 +93,6 @@ export const handler = async (event, context) => {
           );
           body = {
             publicKey: base64PublicKey,
-            rsaPublicKey: base64RsaPublicKey,
             encryptPublicKey: base64EncryptPublicKey
           };
         }

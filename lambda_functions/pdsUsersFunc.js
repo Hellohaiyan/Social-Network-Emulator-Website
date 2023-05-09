@@ -13,6 +13,7 @@ const client = new DynamoDBClient({});
 const dynamo = DynamoDBDocumentClient.from(client);
 
 const tableName = "pdsUsers";
+const keysTableName = "pdsKeys";
 
 
 // Helper function to convert ArrayBuffer to base64 ASCII string
@@ -65,7 +66,7 @@ export const handler = async (event, context) => {
                 
                 // Get PDS keys from pdsKeys table
                 const keyData = await dynamo.send(
-                    new ScanCommand({ TableName: "pdsKeys" })
+                    new ScanCommand({ TableName: keysTableName })
                 );
                 
                 // Convert PDS RSA Encrypting public and ECDH private keys to CryptoKey

@@ -3,7 +3,8 @@ import {
     DynamoDBDocumentClient,
     GetCommand,
     ScanCommand,
-    PutCommand
+    PutCommand,
+    DeleteCommand
 } from "@aws-sdk/lib-dynamodb";
 
 import crypto from "crypto";
@@ -153,13 +154,15 @@ export const handler = async (event, context) => {
             case "PUT /posts": {
                 let requestJSON = JSON.parse(event.body);
 
-                // Get current Post ID and calculate next one
-                let newPostId = 1;
+                // Get current Post IDs and calculate next one
+                let highestPostId = 1;
                 const posts = await dynamo.send(
                     new ScanCommand({ TableName: tableName })
                 );
-                if (posts) {
-                    newPostId = posts.Items.length + 1;
+                for (let i = 0; i < posts.Items.length; i++) {
+                    if (posts.Items[i].postId > highestPostId) {
+                        highestPostId = posts.Items[i].postId;
+                    }
                 }
                 
                 // Grab RSA-OAEP private key of PDS and turn into CryptoKey Object
@@ -241,20 +244,33 @@ export const handler = async (event, context) => {
                         new PutCommand({
                             TableName: tableName,
                             Item: {
-                                postId: newPostId,
+                                postId: highestPostId + 1,
                                 email: requestJSON.email,
                                 post: requestJSON.post,
                                 postDS: requestJSON.postDS
                             },
                         })
                     );
-                    body = `Successfully registered post ${newPostId} to PDS`;
+                    body = `Successfully registered post ${highestPostId + 1} to PDS`;
                 }
                 else {
                     body = `Post failed Digital Signature verification`;
                 }
                 break;
             }
+            case "DELETE /posts/{postId}":
+                const postId = event.pathParameters.postId;
+                await dynamo.send(
+                    new DeleteCommand({
+                        TableName: tableName,
+                        Key: {
+                            postId: parseInt(postId, 10)
+                        }
+                    
+                    })
+                );
+                body = `Successfully deleted post ${postId} from PDS`;
+                break;
             default:
                 throw new Error(`Unsupported route: "${event.routeKey}"`);
         }
