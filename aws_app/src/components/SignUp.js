@@ -102,6 +102,12 @@ export function Signup()
 
     // Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
     const signUp = async () => {
+        // Check if email was entered
+        if (!email) {
+            alert("Please enter valid email.");
+            return;
+        }
+
         // Check if email has already been signed up
         const response = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
         if (response.data) {

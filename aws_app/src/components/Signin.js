@@ -14,15 +14,20 @@ export function Signin ()
     const [showPassword, setShowPassword] = useState(false);
 
     const authenticate = async () => {
-        // Fetch user data from SNE table
-        const response = await axios.get(`https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users/${email}`);
+        if (email) {
+            // Fetch user data from SNE table
+            const response = await axios.get(`https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users/${email}`);
 
-        // Login user if passwords match
-        const userPassword = response.data.password;
-        if (userPassword === password) {
-            localStorage.setItem('email', email);
-        } else {
-            alert('Invalid email or password. Please try again.');
+            // Login user if passwords match
+            const userPassword = response.data.password;
+            if (userPassword === password) {
+                localStorage.setItem('email', email);
+            } else {
+                alert('Invalid email or password. Please try again.');
+            }
+        }
+        else {
+            alert("Please enter valid email.");
         }
     };
   
