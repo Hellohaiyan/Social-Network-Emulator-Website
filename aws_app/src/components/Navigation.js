@@ -3,9 +3,9 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 
+
 export function Navigation() 
 {
-
     const loggedIn = localStorage.getItem('email');
     var signInOut;
     var signUp;

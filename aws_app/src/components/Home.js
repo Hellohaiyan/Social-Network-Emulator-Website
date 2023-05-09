@@ -1,6 +1,5 @@
 import React from "react";
 import Image from 'react-bootstrap/Image';
-
 import AWS from "../images/AWS.png"
 
 

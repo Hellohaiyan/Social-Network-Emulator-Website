@@ -7,7 +7,6 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
 
-
 // Helper function to convert ArrayBuffer to base64 ASCII string
 function arrayBufferToBase64(buffer) 
 {
@@ -45,7 +44,7 @@ async function importPdsPublicKey() {
     return pdsPublicKey;
 }
 
-// Helper function to perform Diffie-Hellman shared key generation
+// Helper function to create all keys needed by client
 async function createKeys() 
 {
     // Generate client's ECDH public/private key pair
@@ -101,12 +100,8 @@ export function Signup()
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  
-
-
     // Function to send the email and password encrypted by the shared key, and also the client public key to PDS.
     const signUp = async () => {
-
         // Check if email has already been signed up
         const response = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
         if (response.data) {
@@ -119,12 +114,12 @@ export function Signup()
             {"email": email, "password": password}
         );
         
-        // Generate diffie hellman shared key
+        // Generate public/private key pairs and shared key
         const { publicKey, privateKey, rsaPublicKey, rsaPrivateKey, sharedKey } = await createKeys();
     
         // Encrypt password with shared key
         const base64Password = utf8ToBase64(password);
-        const encodedPassword = base64ToArrayBuffer(base64Password);
+        const arrayBufferPassword = base64ToArrayBuffer(base64Password);
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
         const encryptedPassword = await crypto.subtle.encrypt(
             {
@@ -132,7 +127,7 @@ export function Signup()
                 length: 256,
                 iv: iv
             },
-            sharedKey, encodedPassword
+            sharedKey, arrayBufferPassword
         );
     
         // Convert encrypted password and IV from ArrayBuffers to base64 ASCII strings
@@ -208,7 +203,7 @@ export function Signup()
                 <Form.Group className="mb-3">
                     <Form.Label>Password:</Form.Label>
                     <Form.Control
-                        type={showPassword ? "text" : "password"} // Set the input type based on showPassword state
+                        type={showPassword ? "text" : "password"}
                         name="password"
                         placeholder="Enter password"
                         value={password}

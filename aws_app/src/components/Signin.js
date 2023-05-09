@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
+
 export function Signin ()
 {
     const [email, setEmail] = useState('');
@@ -14,15 +15,11 @@ export function Signin ()
 
     const authenticate = async () => {
         // Fetch user data from SNE table
-        const response = await axios.get(
-            "https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users"
-        );
+        const response = await axios.get(`https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users/${email}`);
 
-        // Check if email and password match
-        const userData = response.data.find(user => user.email === email && user.password === password);
-      
-        // If user data is found, store email in local storage
-        if (userData) {
+        // Login user if passwords match
+        const userPassword = response.data.password;
+        if (userPassword === password) {
             localStorage.setItem('email', email);
         } else {
             alert('Invalid email or password. Please try again.');
@@ -54,7 +51,7 @@ export function Signin ()
                 <Form.Group className="mb-3">
                     <Form.Label>Password:</Form.Label>
                     <Form.Control
-                        type={showPassword ? "text" : "password"} // Set the input type based on showPassword state
+                        type={showPassword ? "text" : "password"}
                         name='password'
                         placeholder="Enter password"
                         value={password}

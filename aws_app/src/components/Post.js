@@ -73,7 +73,7 @@ export function Post() {
     }, []);
 
     const handlePost = async () => {
-        // Fetch the sharedKey and rsaPrivateKey from local storage and conver them to CryptoKey objects
+        // Fetch the sharedKey and rsaPrivateKey from local storage and convert them to CryptoKey objects
         const base64SharedKey = localStorage.getItem('sharedKey');
         const base64RsaPrivateKey = localStorage.getItem('rsaPrivateKey');
 
@@ -93,14 +93,14 @@ export function Post() {
 
         // Create digital signature with rsaPrivateKey
         const base64Content = utf8ToBase64(content);
-        const arrayBufferCotent = base64ToArrayBuffer(base64Content);
+        const arrayBufferContent = base64ToArrayBuffer(base64Content);
         const signature = await crypto.subtle.sign(
             {
               name: "RSA-PSS",
               saltLength: 32
             },
             rsaPrivateKey,
-            arrayBufferCotent
+            arrayBufferContent
           );
  
         // Convert signatue from ArrayBuffers to base64 ASCII strings and set it to the state variable
@@ -115,7 +115,7 @@ export function Post() {
             length: 256,
             iv: arrayBufferIV 
         },
-            sharedKey,  arrayBufferCotent 
+            sharedKey, arrayBufferContent 
         );
     
         // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
@@ -148,8 +148,7 @@ export function Post() {
         postData = postData.data;
         const base64EncryptedPost = postData.base64EncryptedPost;
         const base64PostDS = postData.postDS;
-        const base64PosterRsaPublicKey = postData.posterRsaPublicKey;
-        
+        const base64PosterRsaPublicKey = postData.posterRsaPublicKey; 
 
         const arrayBufferEncryptedPost = base64ToArrayBuffer(base64EncryptedPost);
         const arrayBufferPostDS = base64ToArrayBuffer(base64PostDS);
@@ -209,6 +208,8 @@ export function Post() {
         event.preventDefault();   
         await handlePost();
 
+        alert("Successfully uploaded post.");
+
         // Fetch all existing postids from SNE again after handlePost function completed 
         fetchPostIds();
     }
@@ -232,8 +233,7 @@ export function Post() {
     return (
         <Form className="Form" onSubmit={handleSubmit}>
             <Container>
-                <h1 className='text-center'>Write Your Post</h1>
-                <Form.Group className="mb-3"></Form.Group>        
+                <h1 className='text-center'>Write Your Post</h1>       
                 <b><Form.Label>User: {email}</Form.Label></b>
                 <Form.Group controlId="content">
                     <Form.Label>Post Content:</Form.Label>
@@ -265,19 +265,19 @@ export function Post() {
                         ))}
                     </div>
                 </Form.Group>
-               <Modal show={showModal} onHide={handleCloseModal}>
-                <Modal.Header closeButton>
-                    <Modal.Title>View Post Content</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>{viewPostContent}</p> {/* Display the view post content */}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModal}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                <Modal show={showModal} onHide={handleCloseModal}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>View Post Content</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p>{viewPostContent}</p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseModal}>
+                            Close
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </Container>
         </Form>   
     );
