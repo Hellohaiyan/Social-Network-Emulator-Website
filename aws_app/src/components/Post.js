@@ -121,21 +121,28 @@ export function Post() {
         // Convert encrypted post content from ArrayBuffers to base64 ASCII strings
         const base64EncryptedContent = arrayBufferToBase64(encryptedArrayBufferContent);
 
-        // Send the post data to PDS
-        await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
-            {
-                "email": email,
-                "post": base64EncryptedContent,
-                "postDS": base64Signature
-            }
-        );
-       
-        // Send the post data to SNE
-        await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', 
-            { 
-                "email": email
-            }
-        );
+        try {
+            // Send the post data to PDS
+            await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
+                {
+                    "email": email,
+                    "post": base64EncryptedContent,
+                    "postDS": base64Signature
+                }
+            );
+        
+            // Send the post data to SNE
+            await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', 
+                { 
+                    "email": email
+                }
+            );
+
+            alert("Successfully uploaded post.");
+        }
+        catch {
+            alert("Failed to upload post.");
+        }
     }
 
     const handleViewPost = async (postId, index) => {
@@ -144,60 +151,67 @@ export function Post() {
             "postId": postId,
             "viewer": email
         };
-        let postData = await axios.put("https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/view", putData);
-        postData = postData.data;
-        const base64EncryptedPost = postData.base64EncryptedPost;
-        const base64PostDS = postData.postDS;
-        const base64PosterRsaPublicKey = postData.posterRsaPublicKey; 
 
-        const arrayBufferEncryptedPost = base64ToArrayBuffer(base64EncryptedPost);
-        const arrayBufferPostDS = base64ToArrayBuffer(base64PostDS);
-        const arrayBufferPosterRsaPublicKey = base64ToArrayBuffer(base64PosterRsaPublicKey);
-        const posterRsaPublicKey = await crypto.subtle.importKey('spki', arrayBufferPosterRsaPublicKey,
-            {
-                name: "RSA-PSS",
-                modulesLength: 4096,
-                publicExponent: new Uint8Array([1, 0, 1]),
-                hash: "SHA-256"
-            }, false, ['verify']
-        );
+        try {
+            let postData = await axios.put("https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/view", putData);
+        
+            postData = postData.data;
+            const base64EncryptedPost = postData.base64EncryptedPost;
+            const base64PostDS = postData.postDS;
+            const base64PosterRsaPublicKey = postData.posterRsaPublicKey; 
 
-        // Fetch the viewer sharedKey and IV from local storage
-        const base64SharedKey = localStorage.getItem('sharedKey');
-        const base64IV = localStorage.getItem("IV");
-        const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey);
-        const arrayBufferIV = base64ToArrayBuffer(base64IV);
-        const sharedKey = await crypto.subtle.importKey('raw', arrayBufferSharedKey, {name: "AES-GCM", length: 256}, false, ['encrypt', 'decrypt']);
+            const arrayBufferEncryptedPost = base64ToArrayBuffer(base64EncryptedPost);
+            const arrayBufferPostDS = base64ToArrayBuffer(base64PostDS);
+            const arrayBufferPosterRsaPublicKey = base64ToArrayBuffer(base64PosterRsaPublicKey);
+            const posterRsaPublicKey = await crypto.subtle.importKey('spki', arrayBufferPosterRsaPublicKey,
+                {
+                    name: "RSA-PSS",
+                    modulesLength: 4096,
+                    publicExponent: new Uint8Array([1, 0, 1]),
+                    hash: "SHA-256"
+                }, false, ['verify']
+            );
 
-        // Decrpyt Post
-        const arrayBufferPost = await crypto.subtle.decrypt(
-            {
-                name: "AES-GCM",
-                length: 256,
-                iv: arrayBufferIV
-            }, sharedKey, arrayBufferEncryptedPost
-        );
+            // Fetch the viewer sharedKey and IV from local storage
+            const base64SharedKey = localStorage.getItem('sharedKey');
+            const base64IV = localStorage.getItem("IV");
+            const arrayBufferSharedKey = base64ToArrayBuffer(base64SharedKey);
+            const arrayBufferIV = base64ToArrayBuffer(base64IV);
+            const sharedKey = await crypto.subtle.importKey('raw', arrayBufferSharedKey, {name: "AES-GCM", length: 256}, false, ['encrypt', 'decrypt']);
 
-        // Viewer verifies the post using the PostDS
-        const valid = await crypto.subtle.verify(
-            {
-                name: "RSA-PSS",
-                saltLength: 32,
-            },
-            posterRsaPublicKey, arrayBufferPostDS, arrayBufferPost
-        );
+            // Decrpyt Post
+            const arrayBufferPost = await crypto.subtle.decrypt(
+                {
+                    name: "AES-GCM",
+                    length: 256,
+                    iv: arrayBufferIV
+                }, sharedKey, arrayBufferEncryptedPost
+            );
 
-        if (valid) {
-            // show post to viewer
-            const decodedPost = arrayBufferToBase64(arrayBufferPost);
-            const viewContent = base64ToUtf8(decodedPost);
-            setViewContent(viewContent);
-            setShowModal(true); // Show the modal
+            // Viewer verifies the post using the PostDS
+            const valid = await crypto.subtle.verify(
+                {
+                    name: "RSA-PSS",
+                    saltLength: 32,
+                },
+                posterRsaPublicKey, arrayBufferPostDS, arrayBufferPost
+            );
+
+            if (valid) {
+                // show post to viewer
+                const decodedPost = arrayBufferToBase64(arrayBufferPost);
+                const viewContent = base64ToUtf8(decodedPost);
+                setViewContent(viewContent);
+                setShowModal(true); // Show the modal
+            }
+            else {
+                alert("Post failed Digital Signature verification.");
+            }
+            setActiveButtonIndex(index); // Update the activeButtonIndex state with the index of the clicked button
         }
-        else {
-            alert("Post failed Digital Signature verification.");
+        catch {
+            alert("Unable to view post.");
         }
-        setActiveButtonIndex(index); // Update the activeButtonIndex state with the index of the clicked button
     }
     
     const handleCloseModal = () => {
@@ -207,8 +221,6 @@ export function Post() {
     const handleSubmit = async (event) => {
         event.preventDefault();   
         await handlePost();
-
-        alert("Successfully uploaded post.");
 
         // Fetch all existing postids from SNE again after handlePost function completed 
         fetchPostIds();
