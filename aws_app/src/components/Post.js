@@ -49,7 +49,7 @@ export function Post() {
     const [activeButtonIndex, setActiveButtonIndex] = useState(null); // State to store the index of the active button
 
     const fetchPostIds = async () => {
-        const response = await axios.get('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts');
+        const response = await axios.get('https://8ed9jn76q2.execute-api.us-west-1.amazonaws.com/posts');
         const postData = response.data;
         const postIds = postData.map(post => post.postId).sort();
             const emailsByPostId = {};
@@ -123,7 +123,7 @@ export function Post() {
 
         try {
             // Send the post data to PDS
-            await axios.put('https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts', 
+            await axios.put('https://vd6xek6xw0.execute-api.us-west-1.amazonaws.com/posts', 
                 {
                     "email": email,
                     "post": base64EncryptedContent,
@@ -132,7 +132,7 @@ export function Post() {
             );
         
             // Send the post data to SNE
-            await axios.put('https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts', 
+            await axios.put('https://8ed9jn76q2.execute-api.us-west-1.amazonaws.com/posts', 
                 { 
                     "email": email
                 }
@@ -153,7 +153,7 @@ export function Post() {
         };
 
         try {
-            let postData = await axios.put("https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/view", putData);
+            let postData = await axios.put("https://vd6xek6xw0.execute-api.us-west-1.amazonaws.com/posts/view", putData);
         
             postData = postData.data;
             const base64EncryptedPost = postData.base64EncryptedPost;
@@ -228,10 +228,10 @@ export function Post() {
 
     const handleDeletePost = async (postId) => {
         // Delete post from PDS
-        await axios.delete(`https://1ol178inca.execute-api.us-west-1.amazonaws.com/posts/${postId}`);
+        await axios.delete(`https://vd6xek6xw0.execute-api.us-west-1.amazonaws.com/posts/${postId}`);
 
         // Delete post from SNE
-        const response = await axios.delete(`https://4eb44pf1u2.execute-api.us-west-1.amazonaws.com/posts/${postId}`);
+        const response = await axios.delete(`https://8ed9jn76q2.execute-api.us-west-1.amazonaws.com/posts/${postId}`);
 
         if (response.data) {
             alert('Successfully deleted post');
@@ -245,23 +245,26 @@ export function Post() {
     return (
         <Form className="Form" onSubmit={handleSubmit}>
             <Container>
-                <h1 className='text-center'>Write Your Post</h1>       
+                <h1 className='text-center' style={{ border: '2px solid lightblue', padding: '10px', backgroundColor: 'lightblue', fontFamily: 'Calibri' }}>
+                    Write Your Post</h1>       
                 <b><Form.Label>User: {email}</Form.Label></b>
                 <Form.Group controlId="content">
                     <Form.Label>Post Content:</Form.Label>
                     <Form.Control
                         as="textarea"
-                        rows={3}
+                        rows={4}
+                        style={{ width: '50%' }} 
                         value={content}
                         onChange={(event) => setContent(event.target.value)}
                     />
                 </Form.Group>
-                <div className='text-center mt-3'>
-                    <Button variant="primary" type="submit">Post</Button>
+                <div className='text-left mt-3'>
+                    <Button variant="primary" type="submit" style={{ backgroundColor: 'orange',color: 'black',  borderColor: 'orange' }}>Post</Button>
                 </div>
-                <Form.Group style={{paddingTop:"50px"}} controlId="postId">
-                    <h1 className='text-center'>View Posts</h1>
-                    <div className='text-center'>
+                <Form.Group style={{paddingTop:"50px"}} controlId="postId" >
+                    <h1 className='text-center' style={{ border: '2px solid lightblue', padding: '10px', backgroundColor: 'lightblue', fontFamily: 'Calibri' }}>
+                        View Posts</h1>
+                    <div className='text-left'>
                         {postIdsWithEmails.map(({ postId, email }, index)  => (
                             <div key={postId} style={{paddingTop:"30px"}}>
                                 <b style={{ display: 'inline-block', width: '150px', paddingRight:"200px" }}>{email}: </b>
@@ -278,7 +281,7 @@ export function Post() {
                     </div>
                 </Form.Group>
                 <Modal show={showModal} onHide={handleCloseModal}>
-                    <Modal.Header closeButton>
+                    <Modal.Header closeButton style={{ borderBottom: 'none', backgroundColor: 'lightblue' }}>
                         <Modal.Title>View Post Content</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>

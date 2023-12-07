@@ -33,7 +33,7 @@ function utf8ToBase64(str) {
 
 // Helper function to convert pds public key to a CryptoKey
 async function importPdsPublicKey() {
-    var publicKey = await axios.get("https://7v0eygvorb.execute-api.us-west-1.amazonaws.com/publicKey");
+    var publicKey = await axios.get("https://lhm97jhwfe.execute-api.us-west-1.amazonaws.com/publicKey");
     publicKey = publicKey.data.publicKey;
 
     // Convert from a base64 ASCII string to an ArrayBuffer
@@ -109,14 +109,14 @@ export function Signup()
         }
 
         // Check if email has already been signed up
-        const response = await axios.get(`https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users/${email}`);
+        const response = await axios.get(`https://84qm0tow3e.execute-api.us-west-1.amazonaws.com/users/${email}`);
         if (response.data) {
             alert('This email has already been signed up.');
             return;
         }
 
         // Send the user's email and password to SNE
-        await axios.put("https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users",
+        await axios.put("https://84qm0tow3e.execute-api.us-west-1.amazonaws.com/users",
             {"email": email, "password": password}
         );
         
@@ -148,7 +148,7 @@ export function Signup()
         const base64RsaPublicKey = arrayBufferToBase64(arrayBufferRsaPublicKey);
     
         // Send encrypted email, password, client public key, and IV to PDS
-        await axios.put('https://u4gaaf1f07.execute-api.us-west-1.amazonaws.com/users', 
+        await axios.put('https://6og1udg2vl.execute-api.us-west-1.amazonaws.com/users', 
             {
                 "email": email,    
                 "password": base64EncryptedPassword,
@@ -188,10 +188,8 @@ export function Signup()
              alert('Password and confirm password do not match.');
              return;
         }
-
-        await signUp();
+        await signUp();       
     };
-
     return (
         <Form className="Form" onSubmit={handleSubmit}>
             <Container className='w-25'>

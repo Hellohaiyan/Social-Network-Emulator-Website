@@ -16,7 +16,7 @@ export function Signin ()
     const authenticate = async () => {
         if (email) {
             // Fetch user data from SNE table
-            const response = await axios.get(`https://agx9exeaue.execute-api.us-west-1.amazonaws.com/users/${email}`);
+            const response = await axios.get(`https://84qm0tow3e.execute-api.us-west-1.amazonaws.com/users/${email}`);
 
             // Login user if passwords match
             const userPassword = response.data.password;
